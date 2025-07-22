@@ -1,0 +1,89 @@
+console.log("SCRIPT RUNNING");
+
+if (window.location.pathname.includes("/home")) {
+  console.log("✅ Path matched:", window.location.pathname);
+
+  window.addEventListener("load", function () {
+    setTimeout(() => {
+      console.log("Review edit script loaded");
+
+      const username = localStorage.getItem("username");
+      const token = localStorage.getItem("access_token");
+
+      if (!username || !token) return;
+
+      document.querySelectorAll(".rating-cell").forEach(cell => {
+        if (cell.dataset.reviewer === username) {
+          const rating = cell.dataset.rating || "";
+          const movieId = cell.dataset.id;
+
+          cell.innerHTML =
+            '<input type="number" min="0" max="10" id="rating-' + username + '-' + movieId + '" value="' + rating + '" style="width: 80px; font-weight: bold; text-align: center;">';
+        }
+      });
+
+      document.querySelectorAll(".review-cell").forEach(cell => {
+        if (cell.dataset.reviewer === username) {
+          const movieId = cell.dataset.id;
+          const currentReview = cell.innerText;
+
+          cell.innerHTML =
+            '<textarea id="review-' + username + '-' + movieId + '" style="width: 100%; height: 60px;">' +
+            currentReview.replace(/"/g, '&quot;').replace(/</g, '&lt;') +
+            '</textarea>' +
+            '<button onclick="updateReview(' + movieId + ', \'' + username + '\')">Save</button>';
+        }
+      });
+    }, 500);
+  });
+}
+
+function updateReview(movieId, reviewer) {
+  const rating = document.getElementById("rating-" + reviewer + "-" + movieId)?.value;
+  const review = document.getElementById("review-" + reviewer + "-" + movieId)?.value;
+  const token = localStorage.getItem("access_token");
+
+  const username = localStorage.getItem("username");
+  const reviewUrl = get_url_by_couple(username);
+
+  if (!token) {
+    alert("You must be logged in to update a review.");
+    return;
+  }
+
+  fetch(reviewUrl + movieId, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+    body: JSON.stringify({
+      rating: parseFloat(rating),
+      review_text: review,
+      reviewer: reviewer
+    })
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Failed to update");
+      return res.json();
+    })
+    .then(data => {
+      alert("Review updated!");
+      location.reload();
+    })
+    .catch(err => {
+      alert("Error: " + err.message);
+    });
+}
+
+function get_url_by_couple(username) {
+  if (username === "trevor" || username === "taylor") {
+    return "https://movieclubdatabase.onrender.com/api/couple_reviews/tt/";
+  } else if (username === "marissa" || username === "nathan") {
+    return "https://movieclubdatabase.onrender.com/api/couple_reviews/mn/";
+  } else if (username === "sierra" || username === "benett") {
+    return "https://movieclubdatabase.onrender.com/api/couple_reviews/sb/";
+  } else {
+    return null;
+  }
+}
