@@ -1,0 +1,7 @@
+.rating-cell {
+  text-align: center;         /* Horizontal centering */
+  vertical-align: middle;     /* Vertical centering */
+  font-size: 14px;
+  border: 1px solid black;
+  color: white;
+}
