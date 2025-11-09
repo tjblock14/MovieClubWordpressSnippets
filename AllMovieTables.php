@@ -327,3 +327,6 @@ add_movie_table_shortcode('sb_table', 'sb_reviews', 'Sierra', 'Benett');
 
 // Dad (Rob) / Mom (Terry): custom display labels different from API reviewer keys
 add_movie_table_shortcode('mom_dad_table', 'mom_dad_reviews', 'Rob', 'Terry', 'Dad', 'Mom');
+
+// Mia and Logan
+add_movie_table_shortcode('mia_logan_table', 'mia_logan_reviews', 'Mia', 'Logan');
