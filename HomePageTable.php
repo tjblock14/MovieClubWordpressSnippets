@@ -120,7 +120,10 @@ add_shortcode('club_average_table', function() {
   document.addEventListener("DOMContentLoaded", function(){
     const sel=document.getElementById("club-sort"); if(!sel) return;
     sel.addEventListener("change", function(){ sortTable(this.value); });
-    // sortTable(sel.value); // enable if you want default sort on load
+	
+     // Sort by average high to low by default
+      sel.value = "avg_desc";  // set dropdown to show this choice
+      sortTable("avg_desc");   // perform the sort
   });
 })();
 </script>';
