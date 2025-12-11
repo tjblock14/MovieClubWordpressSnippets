@@ -66,9 +66,9 @@ if (!function_exists('review_value')) {
  * @param string|null $labelA Optional display label for A (e.g., 'Dad'); defaults to $reviewerA
  * @param string|null $labelB Optional display label for B (e.g., 'Mom'); defaults to $reviewerB
  */
-if (!function_exists('add_movie_table_shortcode')) 
+if (!function_exists('add_TvShow_table_shortcode')) 
 {
-    function add_movie_table_shortcode(string $shortcode, string $endpoint, string $reviewerA, string $reviewerB, ?string $labelA = null, ?string $labelB = null) 
+    function add_TvShow_table_shortcode(string $shortcode, string $endpoint, string $reviewerA, string $reviewerB, ?string $labelA = null, ?string $labelB = null) 
 	{
 
         add_shortcode($shortcode, function() use ($endpoint, $reviewerA, $reviewerB, $labelA, $labelB) 
@@ -87,7 +87,7 @@ if (!function_exists('add_movie_table_shortcode'))
             if (!is_array($data) || !isset($data['results']) || !is_array($data['results'])) {
                 return '<p>Error: No data returned</p>';
             }
-            $movies = $data['results'];
+            $TvShows = $data['results'];
 
             // Normalize labels for headers (allow custom labels like "Dad"/"Mom")
             $displayA = $labelA ?? $reviewerA;
@@ -95,9 +95,9 @@ if (!function_exists('add_movie_table_shortcode'))
 
             // ===== SORT BAR (added) =====
             $html = '
-  <div class="movie-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
-    <label for="movie-sort" style="font-weight:600;">Sort by:</label>
-    <select id="movie-sort" class="movie-sort">
+  <div class="TvShow-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
+    <label for="TvShow-sort" style="font-weight:600;">Sort by:</label>
+    <select id="TvShow-sort" class="TvShow-sort">
       <option value="avg_desc">Couple Average: high → low</option>
       <option value="avg_asc">Couple Average: low → high</option>
       <option value="u1_desc">' . esc_html($displayA) . ' rating — high → low</option>
@@ -112,38 +112,52 @@ if (!function_exists('add_movie_table_shortcode'))
             // Build table
             // (added: id and data-user1/data-user2 for sorting)
             $html .= '<div style="overflow-x: auto;">
-   <table id="movie-table" data-user1="' . esc_attr(strtolower($reviewerA)) . '" data-user2="' . esc_attr(strtolower($reviewerB)) . '" style="border-collapse: collapse; min-width: 1400px; font-size: 14px; border: 2px solid black;">
+   <table id="TvShow-table" data-user1="' . esc_attr(strtolower($reviewerA)) . '" data-user2="' . esc_attr(strtolower($reviewerB)) . '" style="border-collapse: collapse; min-width: 1400px; font-size: 14px; border: 2px solid #33151A;">
         <thead>
             <tr>
-                <th style="width: 150px; text-align: center; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">Title</th>
-                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">Director</th>
-                <th style="width: 250px; text-align: center; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">Actors</th>
-                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">Genres</th>
-                <th style="width: 100px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayA) . ' Rating</th>
-                <th style="width: 600px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayA) . ' Review</th>
-                <th style="width: 100px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayB) . ' Rating</th>
-                <th style="width: 600px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayB) . ' Review</th>
-				<th style = "width: 150px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
+				 <th style="width: 150px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A ;">Image</th>
+                <th style="width: 150px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A ;">Title</th>
+                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Summary</th>
+                <th style="width: 250px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Genres</th>
+                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Premiered</th>
+				<th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Creators</th>
+				<th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Status</th>
+				<th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;"># of Seasons</th>
+                <th style="width: 100px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayA) . ' Rating</th>
+                <th style="width: 150px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">' . esc_html($displayA) . ' Comments</th>
+                <th style="width: 100px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayB) . ' Rating</th>
+                <th style="width: 150px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayB) . ' Comments</th>
+				<th style = "width: 150px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
             </tr>
         </thead>
         <tbody>';
 
-            foreach ($movies as $movie)
+            foreach ($TvShows as $TvShow)
 			{
-                $movie_id = $movie['movie_id'];
-                $title    = $movie['title'] ?? '';
+                $TvShow_id = $TvShow['id'];
+                $title    = $TvShow['title'] ?? '';
 
                 $html .= '<tr>';
 
                 // Title / Director / Actors / Genres
                 // (added classes for sorting: title-cell, director-cell)
-                $html .= '<td class="title-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($title) . '</td>';
-                $html .= '<td class="director-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($movie['director'] ?? '')) . 							 '</td>';
-                $html .= '<td style="width: 250px; text-align: center; vertical-align: middle; font-size: 14px; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($movie['actors'] ?? '')) . '</td>';
-                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($movie['genres'] 							 ?? '')) . '</td>';
+                $html .= '<td style="width: 250px; text-align: center; vertical-align: middle; font-size: 14px; color:#FBFCEE; border-collapse: collapse; border: 1px solid black;">'
+       						. '<img src="' . esc_url($TvShow['image_url']) . '" alt="' . esc_attr($TvShow['title']) . '" ' # display the title if the show image is not loading
+       						. 'style="max-width: 120px; height: auto; border-radius: 4px;" />'
+       						. '</td>';
+				
+                $html .= '<td class="title-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html($title) . '</td>';
+                $html .= '<td class="creators-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['creators'] ?? '')) . 	'</td>';
+                #$html .= '<td style="width: 250px; text-align: center; vertical-align: middle; font-size: 14px; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['actors'] ?? '')) . '</td>';
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['genres'] 	 ?? '')) . '</td>';
+
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['premiered'] 	 ?? '')) . '</td>';
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['creators'] 	 ?? '')) . '</td>';
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['status'] 	 ?? '')) . '</td>';
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['num_seasons'] 	 ?? '')) . '</td>';
 
                 // Reviews block
-                $reviews = $movie['reviews'] ?? [];
+                $reviews = $TvShow['reviews'] ?? [];
 
                 // Reviewer A values
                 $user1_rating = review_value($reviews, $reviewerA, 'rating');
@@ -153,9 +167,9 @@ if (!function_exists('add_movie_table_shortcode'))
                 $user1_data_reviewer = strtolower($reviewerA); // match your JS which uses lowercase usernames
 
                 // (fixed a tiny spacing bug: ensure a space before data-rating)
-                $html .= '<td class="rating-cell" data-review-type="movie" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . 						   '" data-rating="' . esc_attr($user1_rating) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
+                $html .= '<td class="rating-cell" data-review-type="tv" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . 						   '" data-rating="' . esc_attr($user1_rating) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
 
-                $html .= '<td class="review-cell" data-review-type="movie" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . 							'">' . esc_html($user1_review) . '</td>';
+                $html .= '<td class="review-cell" data-review-type="tv" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . 							'">' . esc_html($user1_review) . '</td>';
 
                 // Reviewer B values
                 $user2_rating = review_value($reviews, $reviewerB, 'rating');
@@ -164,9 +178,9 @@ if (!function_exists('add_movie_table_shortcode'))
                 $user2_color  = color_rating_cell($user2_rating);
                 $user2_data_reviewer = strtolower($reviewerB);
 
-                $html .= '<td class="rating-cell" data-review-type="movie" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							'" data-rating="' . esc_attr($user2_rating) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
+                $html .= '<td class="rating-cell" data-review-type="tv" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							'" data-rating="' . esc_attr($user2_rating) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
 
-                $html .= '<td class="review-cell" data-review-type="movie" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							   '">' . esc_html($user2_review) . '</td>';
+                $html .= '<td class="review-cell" data-review-type="tv" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							   '">' . esc_html($user2_review) . '</td>';
 				
 				// Calculate average rating (only if both are numeric)
 				$avg_rating = (is_numeric($user1_rating) && is_numeric($user2_rating))
@@ -266,7 +280,7 @@ if (!function_exists('add_movie_table_shortcode'))
 
   function sortTable(mode) 
   {
-    const table = document.getElementById("movie-table");
+    const table = document.getElementById("TvShow-table");
     if (!table) 
         return;
 
@@ -292,7 +306,7 @@ if (!function_exists('add_movie_table_shortcode'))
 
   document.addEventListener("DOMContentLoaded", function() 
   {
-    const sel = document.getElementById("movie-sort");
+    const sel = document.getElementById("TvShow-sort");
     if (!sel) return;
 
     sel.addEventListener("change", function() 
@@ -306,6 +320,11 @@ if (!function_exists('add_movie_table_shortcode'))
 })();
 </script>';
 
+             // ===== TVMaze CREDIT (required attribution) =====
+            $html .= '<div class="tvmaze-credit" style="font-size:12px; margin-top:8px; opacity:0.7;">
+               TV Show Data provided by <a href="https://www.tvmaze.com" target="_blank" rel="noopener noreferrer">TVmaze.com</a>.
+            </div>';
+
             return $html;
         });
     }
@@ -317,16 +336,16 @@ if (!function_exists('add_movie_table_shortcode'))
  *******************************************************/
 
 // Trevor / Taylor (labels match names)
-add_movie_table_shortcode('tnt_table', 'tnt_reviews', 'Trevor', 'Taylor');
+add_TvShow_table_shortcode('tnt_tv_show_table', 'tnt_tv_reviews', 'Trevor', 'Taylor');
 
 // Marissa / Nathan (labels match names)
-add_movie_table_shortcode('mn_table', 'mn_reviews', 'Marissa', 'Nathan');
+add_TvShow_table_shortcode('mn_tv_show_table', 'mn_tv_reviews', 'Marissa', 'Nathan');
 
 // Sierra / Benett (labels match names)
-add_movie_table_shortcode('sb_table', 'sb_reviews', 'Sierra', 'Benett');
+add_TvShow_table_shortcode('sb_tv_show_table', 'sb_tv_reviews', 'Sierra', 'Benett');
 
 // Dad (Rob) / Mom (Terry): custom display labels different from API reviewer keys
-add_movie_table_shortcode('mom_dad_table', 'mom_dad_reviews', 'Rob', 'Terry', 'Dad', 'Mom');
+add_TvShow_table_shortcode('mom_dad_tv_show_table', 'mom_dad_tv_reviews', 'Rob', 'Terry', 'Dad', 'Mom');
 
 // Mia and Logan
-add_movie_table_shortcode('mia_logan_table', 'mia_logan_reviews', 'Mia', 'Logan');
+add_TvShow_table_shortcode('mia_logan_tv_show_table', 'mia_logan_tv_reviews', 'Mia', 'Logan');

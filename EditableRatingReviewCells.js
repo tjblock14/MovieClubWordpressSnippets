@@ -1,22 +1,19 @@
 /***************************************************************************************************
- * Movie Club — Inline/Modal Edit Script (single-file version)
+ * Movie Club — Inline/Modal Edit Script (movies + TV shows)
  * - Ratings: inline number input (Enter/blur saves)
  * - Reviews: fullscreen modal textarea (Save/Cancel)
  * - Only one cell can be edited at a time
- * - Modal title shows reviewer + movie title
+ * - Supports both movie and TV show ratings via data-review-type="movie" | "tv"
  ***************************************************************************************************/
 
 /* ===== Global state ===== */
 let activeCell = null;
-let modalMeta  = null;          // { cell, reviewer, movieId }
+let modalMeta  = null;          // { cell, reviewer, itemId, reviewType, coupleSlug }
 let mcBackdrop = null;
 let mcModal    = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   console.log("Review edit script (with modal) loaded");
-
-  // Optional: only run if table exists
-  // if (!document.querySelector('.tnt-table')) return;
 
   // Basic blocked-cell style
   const style = document.createElement("style");
@@ -67,20 +64,37 @@ document.addEventListener("DOMContentLoaded", () => {
   document.body.append(mcBackdrop, mcModal);
 
   // Modal button handlers
-  document.getElementById("mc-cancel").addEventListener("click", () => { closeReviewModal(); closeActiveEditor(true); });
-  document.getElementById("mc-close").addEventListener("click",  () => { closeReviewModal(); closeActiveEditor(true); });
+  document.getElementById("mc-cancel").addEventListener("click", () => {
+    closeReviewModal();
+    closeActiveEditor(true);
+  });
+  document.getElementById("mc-close").addEventListener("click",  () => {
+    closeReviewModal();
+    closeActiveEditor(true);
+  });
   document.getElementById("mc-save").addEventListener("click", async () => {
     if (!modalMeta) return;
     const text = document.getElementById("mc-textarea").value;
     modalMeta.cell.textContent = text;
-    await updateReview(modalMeta.movieId, modalMeta.reviewer, "rating_justification", text);
+    await updateReview(
+      modalMeta.itemId,
+      modalMeta.reviewer,
+      "rating_justification",
+      text,
+      modalMeta.reviewType,
+      modalMeta.coupleSlug
+    );
     closeReviewModal();
     closeActiveEditor(false);
   });
   document.getElementById("mc-textarea").addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { e.preventDefault(); document.getElementById("mc-cancel").click(); }
+    if (e.key === "Escape") {
+      e.preventDefault();
+      document.getElementById("mc-cancel").click();
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-      e.preventDefault(); document.getElementById("mc-save").click();
+      e.preventDefault();
+      document.getElementById("mc-save").click();
     }
   });
 
@@ -97,23 +111,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* === Helpers === */
 function getCurrentUser() {
-  return (localStorage.getItem('username') || '').toLowerCase();
+  return (localStorage.getItem("username") || "").toLowerCase();
 }
 
 function cellIsOwnedByUser(cell) {
-  const reviewer = (cell.dataset.reviewer || '').toLowerCase();
+  const reviewer = (cell.dataset.reviewer || "").toLowerCase();
   return reviewer === getCurrentUser();
 }
 
-async function findReviewId(movieId, reviewerUsername) {
+/**
+ * Unified "find review" for both movies and TV.
+ * - reviewType: "movie" | "tv"
+ * - coupleSlug: only used for TV reviews
+ */
+async function findReviewId(itemId, reviewerUsername, reviewType, coupleSlug) {
   try {
-    const response = await fetch("https://movieclubdatabase.onrender.com/api/reviews/");
-    const data = await response.json();
-    return data.find(r =>
-      parseInt(r.movie) === parseInt(movieId) &&
-      typeof r.reviewer === "string" &&
-      r.reviewer.toLowerCase() === reviewerUsername.toLowerCase()
-    )?.id || null;
+    if (reviewType === "tv") {
+      // TV SHOW REVIEWS
+      const response = await fetch("https://movieclubdatabase.onrender.com/api/tv-reviews/");
+      const data = await response.json();
+      const match = data.find((r) =>
+        parseInt(r.tv_show_type) === parseInt(itemId) &&
+        r.target_type === "show" && // adjust if you add seasons/episodes later
+        (!coupleSlug || r.couple_slug === coupleSlug) &&
+        typeof r.reviewer === "string" &&
+        r.reviewer.toLowerCase() === reviewerUsername.toLowerCase()
+      );
+      return match ? match.id : null;
+    } else {
+      // MOVIE REVIEWS (existing logic)
+      const response = await fetch("https://movieclubdatabase.onrender.com/api/reviews/");
+      const data = await response.json();
+      const match = data.find((r) =>
+        parseInt(r.movie) === parseInt(itemId) &&
+        typeof r.reviewer === "string" &&
+        r.reviewer.toLowerCase() === reviewerUsername.toLowerCase()
+      );
+      return match ? match.id : null;
+    }
   } catch (error) {
     console.error("Error fetching reviews:", error);
     return null;
@@ -128,11 +163,16 @@ function makeCellEditable(cell) {
   activeCell = cell;
   cell.classList.add("editing-cell");
 
-  const reviewer = cell.dataset.reviewer;
-  const movieId = cell.dataset.id;
-  const field = cell.classList.contains("rating-cell") ? "rating" : "rating_justification";
+  const reviewer   = cell.dataset.reviewer;
+  const itemId     = cell.dataset.id;                       // movie id OR tv show id
+  const reviewType = cell.dataset.reviewType || "movie";    // "movie" (default) or "tv"
+  const coupleSlug = cell.dataset.coupleSlug || "";         // only needed for TV
+  const field      = cell.classList.contains("rating-cell")
+    ? "rating"
+    : "rating_justification";
 
-  if (field === "rating") {
+  if (field === "rating") 
+  {
     const currentValue = cell.textContent.trim();
     const input = document.createElement("input");
     input.type = "number";
@@ -144,23 +184,38 @@ function makeCellEditable(cell) {
     input.style.textAlign = "center";
     input.style.fontWeight = "700";
 
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") return closeActiveEditor(true);
+    let alreadySaved = false;
+
+    function saveAndClose() 
+    {
+      if (alreadySaved) return;
+      alreadySaved = true;
+
+      const newValue = input.value.trim();
+      const clamped =
+        newValue === "" ? "" : Math.max(0, Math.min(10, parseFloat(newValue)));
+
+      cell.textContent = clamped;
+      updateReview(itemId, reviewer, "rating", clamped, reviewType, coupleSlug);
+      closeActiveEditor(false);
+    }
+
+    input.addEventListener("keydown", (e) => 
+    {
+      if (e.key === "Escape") {
+        alreadySaved = true;          // prevent blur from saving
+        closeActiveEditor(true);
+        return;
+      }
       if (e.key === "Enter") {
-        const newValue = input.value.trim();
-        const clamped = newValue === "" ? "" : Math.max(0, Math.min(10, parseFloat(newValue)));
-        cell.textContent = clamped;
-        updateReview(movieId, reviewer, "rating", clamped);
-        closeActiveEditor(false);
+        e.preventDefault();           // don’t submit form / cause extra behavior
+        saveAndClose();
       }
     });
 
     input.addEventListener("blur", () => {
-      const newValue = input.value.trim();
-      const clamped = newValue === "" ? "" : Math.max(0, Math.min(10, parseFloat(newValue)));
-      cell.textContent = clamped;
-      updateReview(movieId, reviewer, "rating", clamped);
-      closeActiveEditor(false);
+      // Only save on blur if Enter/Escape didn’t already handle it
+      saveAndClose();
     });
 
     cell.textContent = "";
@@ -174,14 +229,16 @@ function makeCellEditable(cell) {
   openReviewModal({
     cell,
     reviewer,
-    movieId,
+    itemId,
+    reviewType,
+    coupleSlug,
     initialText: cell.textContent.trim(),
-    movieTitle: cell.dataset.movieTitle || "Unknown Movie"
+    movieTitle: cell.dataset.movieTitle || "Unknown Title",
   });
 }
 
-function openReviewModal({ cell, reviewer, movieId, initialText, movieTitle }) {
-  modalMeta = { cell, reviewer, movieId };
+function openReviewModal({ cell, reviewer, itemId, reviewType, coupleSlug, initialText, movieTitle }) {
+  modalMeta = { cell, reviewer, itemId, reviewType, coupleSlug };
   document.getElementById("mc-title").textContent =
     `Edit Review — ${reviewer} (${movieTitle})`;
   const ta = document.getElementById("mc-textarea");
@@ -211,34 +268,89 @@ function hardReload() {
   window.location.replace(url.toString());
 }
 
-async function updateReview(movieId, reviewer, field, newValue) {
+/**
+ * Unified updater for movie & TV reviews
+ * - itemId: movie id OR tv show id
+ * - reviewType: "movie" | "tv"
+ * - coupleSlug: only used for TV
+ */
+async function updateReview(itemId, reviewer, field, newValue, reviewType, coupleSlug) {
   const token = localStorage.getItem("access_token");
-  if (!token) { alert("You must be logged in to update a review."); return; }
-  if (!movieId || !reviewer) { console.error("Missing movieId or reviewer"); return; }
+  if (!token) {
+    alert("You must be logged in to update a review.");
+    return;
+  }
+  if (!itemId || !reviewer) {
+    console.error("Missing itemId or reviewer", { itemId, reviewer });
+    return;
+  }
 
   const isOwner = reviewer.toLowerCase() === getCurrentUser();
-  if (!isOwner) { alert("You can only edit your own cell."); return; }
+  if (!isOwner) {
+    alert("You can only edit your own cell.");
+    return;
+  }
 
-  let reviewId = await findReviewId(movieId, reviewer);
+  console.log("🔹 updateReview called", {
+    itemId,
+    reviewer,
+    field,
+    newValue,
+    reviewType,
+    coupleSlug,
+  });
+
+  // Find existing review (movie or tv)
+  let reviewId = await findReviewId(itemId, reviewer, reviewType, coupleSlug);
   const method = reviewId ? "PATCH" : "POST";
-  const url = reviewId
-    ? `https://movieclubdatabase.onrender.com/api/reviews/${reviewId}/`
-    : `https://movieclubdatabase.onrender.com/api/reviews/`;
 
+  let url;
   const payload = {};
-  if (method === "PATCH") {
-    payload[field] = field === "rating" ? parseFloat(newValue) : newValue;
-  } else {
-    payload["movie"] = parseInt(movieId);
-    payload["reviewer"] = reviewer;
-    if (field === "rating") {
-      payload["rating"] = parseFloat(newValue);
-      payload["rating_justification"] = "";
+
+  if (reviewType === "tv") {
+    // ====== TV SHOW RATINGS & REVIEWS ======
+    url = reviewId
+      ? `https://movieclubdatabase.onrender.com/api/tv-reviews/${reviewId}/`
+      : `https://movieclubdatabase.onrender.com/api/tv-reviews/`;
+
+    if (method === "PATCH") {
+      payload[field] = field === "rating" ? parseFloat(newValue) : newValue;
     } else {
-      payload["rating_justification"] = newValue;
-      payload["rating"] = "";
+      payload.tv_show_type = parseInt(itemId);
+      payload.reviewer     = reviewer;
+      payload.target_type  = "show";        // adjust if you support seasons/episodes later
+      if (coupleSlug) payload.couple_slug = coupleSlug;
+
+      if (field === "rating") {
+        payload.rating = parseFloat(newValue);
+        payload.rating_justification = "";
+      } else {
+        payload.rating_justification = newValue;
+        payload.rating = null;
+      }
+    }
+  } else {
+    // ====== MOVIE RATINGS & REVIEWS (original behavior) ======
+    url = reviewId
+      ? `https://movieclubdatabase.onrender.com/api/reviews/${reviewId}/`
+      : `https://movieclubdatabase.onrender.com/api/reviews/`;
+
+    if (method === "PATCH") {
+      payload[field] = field === "rating" ? parseFloat(newValue) : newValue;
+    } else {
+      payload.movie    = parseInt(itemId);
+      payload.reviewer = reviewer;
+      if (field === "rating") {
+        payload.rating = parseFloat(newValue);
+        payload.rating_justification = "";
+      } else {
+        payload.rating_justification = newValue;
+        payload.rating = "";
+      }
     }
   }
+
+  console.log("🔹 About to send review request", { method, url, payload });
 
   try {
     const res = await fetch(url, {
@@ -249,12 +361,28 @@ async function updateReview(movieId, reviewer, field, newValue) {
       },
       body: JSON.stringify(payload),
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    await res.json();
+
+    const text = await res.text();
+    console.log("🔹 Raw response", { status: res.status, ok: res.ok, text });
+
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (e) {
+      console.warn("Response was not valid JSON");
+    }
+
+    if (!res.ok) {
+      console.error("Update failed (non-2xx)", { status: res.status, data });
+      alert("Error saving review: " + JSON.stringify(data || text));
+      return;
+    }
+
+    console.log("✅ Review saved on server", data);
     alert("Review saved!");
     hardReload();
   } catch (err) {
-    console.error("Update failed:", err);
+    console.error("Update failed (network/JS error):", err);
     alert("Error: " + err.message);
   }
 }
