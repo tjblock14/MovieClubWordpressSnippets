@@ -69,10 +69,10 @@ if (!function_exists('review_value')) {
 if (!function_exists('add_TvShow_table_shortcode')) 
 {
     function add_TvShow_table_shortcode(string $shortcode, string $endpoint, string $reviewerA, string $reviewerB, ?string $labelA = null, ?string $labelB = null) 
-	{
+    {
 
         add_shortcode($shortcode, function() use ($endpoint, $reviewerA, $reviewerB, $labelA, $labelB) 
-		{
+        {
 
             // Fetch data from your configured WPGetAPI connection
             $data = wpgetapi_endpoint('movie_club_database_api', $endpoint, [
@@ -93,7 +93,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
             $displayA = $labelA ?? $reviewerA;
             $displayB = $labelB ?? $reviewerB;
 
-            // ===== SORT BAR (added) =====
+            // ===== SORT BAR =====
             $html = '
   <div class="TvShow-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
     <label for="TvShow-sort" style="font-weight:600;">Sort by:</label>
@@ -110,51 +110,58 @@ if (!function_exists('add_TvShow_table_shortcode'))
   </div>';
 
             // Build table
-            // (added: id and data-user1/data-user2 for sorting)
             $html .= '<div style="overflow-x: auto;">
    <table id="TvShow-table" data-user1="' . esc_attr(strtolower($reviewerA)) . '" data-user2="' . esc_attr(strtolower($reviewerB)) . '" style="border-collapse: collapse; min-width: 1400px; font-size: 14px; border: 2px solid #33151A;">
         <thead>
             <tr>
-				 <th style="width: 150px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A ;">Image</th>
-                <th style="width: 150px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A ;">Title</th>
-                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Summary</th>
-                <th style="width: 250px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Genres</th>
-                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Premiered</th>
-				<th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Creators</th>
-				<th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">Status</th>
-				<th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;"># of Seasons</th>
-                <th style="width: 100px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayA) . ' Rating</th>
-                <th style="width: 150px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid #33151A;">' . esc_html($displayA) . ' Comments</th>
-                <th style="width: 100px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayB) . ' Rating</th>
-                <th style="width: 150px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayB) . ' Comments</th>
-				<th style = "width: 150px; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
+                 <th style="width: 150px; text-align: center; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A ;">Image</th>
+                <th style="width: 150px; text-align: center; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A ;">Title</th>
+                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A;">Summary</th>
+                <th style="width: 250px; text-align: center; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A;">Genres</th>
+                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A;">Premiered</th>
+                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A;">Creators</th>
+                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A;">Status</th>
+                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A;"># of Seasons</th>
+                <th style="width: 100px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayA) . ' Rating</th>
+                <th style="width: 150px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid #33151A;">' . esc_html($displayA) . ' Comments</th>
+                <th style="width: 100px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayB) . ' Rating</th>
+                <th style="width: 150px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayB) . ' Comments</th>
+                <th style="width: 150px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse; border: 1px solid  #33151A;">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
             </tr>
         </thead>
         <tbody>';
 
             foreach ($TvShows as $TvShow)
-			{
+            {
                 $TvShow_id = $TvShow['id'];
-                $title    = $TvShow['title'] ?? '';
+                $title     = $TvShow['title'] ?? '';
 
-                $html .= '<tr>';
+                // NEW: get seasons array for nested rendering
+                $seasons   = $TvShow['seasons'] ?? [];
 
-                // Title / Director / Actors / Genres
-                // (added classes for sorting: title-cell, director-cell)
+                // MAIN SHOW ROW
+                $html .= '<tr class="tvshow-row" data-show-id="' . esc_attr($TvShow_id) . '">'; // NEW class + data attribute
+
+                // Image cell
                 $html .= '<td style="width: 250px; text-align: center; vertical-align: middle; font-size: 14px; color:#FBFCEE; border-collapse: collapse; border: 1px solid black;">'
-       						. '<img src="' . esc_url($TvShow['image_url']) . '" alt="' . esc_attr($TvShow['title']) . '" ' # display the title if the show image is not loading
-       						. 'style="max-width: 120px; height: auto; border-radius: 4px;" />'
-       						. '</td>';
-				
-                $html .= '<td class="title-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html($title) . '</td>';
-                $html .= '<td class="creators-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['creators'] ?? '')) . 	'</td>';
-                #$html .= '<td style="width: 250px; text-align: center; vertical-align: middle; font-size: 14px; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['actors'] ?? '')) . '</td>';
-                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['genres'] 	 ?? '')) . '</td>';
+                            . '<img src="' . esc_url($TvShow['image_url']) . '" alt="' . esc_attr($TvShow['title']) . '" '
+                            . 'style="max-width: 120px; height: auto; border-radius: 4px;" />'
+                            . '</td>';
 
-                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['premiered'] 	 ?? '')) . '</td>';
-                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['creators'] 	 ?? '')) . '</td>';
-                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['status'] 	 ?? '')) . '</td>';
-                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['num_seasons'] 	 ?? '')) . '</td>';
+                // NEW: Title cell now has arrow + tvshow-main-cell class
+                $html .= '<td class="title-cell tvshow-main-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 18px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">'
+                        . '<span class="tvshow-title">' . esc_html($title) . '</span>'
+                        . '<span class="tv-toggle tv-toggle-seasons" data-target="seasons" data-show-id="' . esc_attr($TvShow_id) . '">▼</span>'
+                        . '</td>';
+
+                // (Your original "summary" column currently uses creators-cell; unchanged)
+                $html .= '<td class="creators-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['creators'] ?? '')) . '</td>';
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['genres']      ?? '')) . '</td>';
+
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['premiered']   ?? '')) . '</td>';
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['creators']    ?? '')) . '</td>';
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['status']      ?? '')) . '</td>';
+                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; color: #FBFCEE; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($TvShow['num_seasons'] ?? '')) . '</td>';
 
                 // Reviews block
                 $reviews = $TvShow['reviews'] ?? [];
@@ -162,14 +169,13 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 // Reviewer A values
                 $user1_rating = review_value($reviews, $reviewerA, 'rating');
                 $user1_review = review_value($reviews, $reviewerA, 'review');
-                $user1_id     = review_value($reviews, $reviewerA, 'id'); // allow for lowercase-only id keys
+                $user1_id     = review_value($reviews, $reviewerA, 'id');
                 $user1_color  = color_rating_cell($user1_rating);
-                $user1_data_reviewer = strtolower($reviewerA); // match your JS which uses lowercase usernames
+                $user1_data_reviewer = strtolower($reviewerA);
 
-                // (fixed a tiny spacing bug: ensure a space before data-rating)
-                $html .= '<td class="rating-cell" data-review-type="tv" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . 						   '" data-rating="' . esc_attr($user1_rating) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
+                $html .= '<td class="rating-cell" data-review-type="tv" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '" data-rating="' . esc_attr($user1_rating) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
 
-                $html .= '<td class="review-cell" data-review-type="tv" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . 							'">' . esc_html($user1_review) . '</td>';
+                $html .= '<td class="review-cell" data-review-type="tv" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '">' . esc_html($user1_review) . '</td>';
 
                 // Reviewer B values
                 $user2_rating = review_value($reviews, $reviewerB, 'rating');
@@ -178,23 +184,101 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $user2_color  = color_rating_cell($user2_rating);
                 $user2_data_reviewer = strtolower($reviewerB);
 
-                $html .= '<td class="rating-cell" data-review-type="tv" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							'" data-rating="' . esc_attr($user2_rating) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
+                $html .= '<td class="rating-cell" data-review-type="tv" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '" data-rating="' . esc_attr($user2_rating) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
 
-                $html .= '<td class="review-cell" data-review-type="tv" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							   '">' . esc_html($user2_review) . '</td>';
-				
-				// Calculate average rating (only if both are numeric)
-				$avg_rating = (is_numeric($user1_rating) && is_numeric($user2_rating))
-    						   ? round(($user1_rating + $user2_rating) / 2, 2): '';  // keep 2 decimals
-				
-				// Get the color for that numeric value
-				$avg_color = color_rating_cell($avg_rating);
+                $html .= '<td class="review-cell" data-review-type="tv" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '">' . esc_html($user2_review) . '</td>';
 
-                // (added: avg-cell class + data-rating for sorting; keep it visible)
-				$html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_rating) . '" style="background-color: ' . esc_attr($avg_color) . ';">' 
-      					  .	esc_html($avg_rating) . '</td>';
+                // Calculate average rating
+                $avg_rating = (is_numeric($user1_rating) && is_numeric($user2_rating))
+                               ? round(($user1_rating + $user2_rating) / 2, 2) : '';
+                $avg_color = color_rating_cell($avg_rating);
 
+                $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_rating) . '" style="background-color: ' . esc_attr($avg_color) . ';">' 
+                          . esc_html($avg_rating) . '</td>';
 
                 $html .= '</tr>';
+
+                // NEW: NESTED SEASONS + EPISODES ROW (one per show)
+                $html .= '<tr class="tvshow-seasons-row is-collapsed" data-show-id="' . esc_attr($TvShow_id) . '">
+                            <td colspan="13" style="padding:0; border: none;">
+                                <div class="seasons-wrapper">';
+
+                if (!empty($seasons)) {
+                    $html .= '<table class="seasons-table" style="width:100%; border-collapse:collapse; margin-top:4px;">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:left; padding:4px; color: var(--default_table_text_color);">Season</th>
+                                        <th style="text-align:left; padding:4px; color: var(--default_table_text_color);">Year</th>
+                                        <th style="text-align:left; padding:4px; color: var(--default_table_text_color);">Episodes</th>
+                                        <th style="text-align:left; padding:4px; color: var(--default_table_text_color);">Summary</th>
+                                    </tr>
+                                </thead>
+                                <tbody>';
+
+                    foreach ($seasons as $season) {
+                        $season_id  = $season['id'] ?? 0;
+                        $sn_num     = $season['season_number'] ?? '';
+                        $sn_year    = $season['season_release_year'] ?? '';
+                        $sn_count   = $season['season_episode_cnt'] ?? '';
+                        $sn_summary = wp_kses_post($season['summary'] ?? '');
+                        $episodes   = $season['episodes'] ?? [];
+
+                        // Season row
+                        $html .= '<tr class="season-row" data-season-id="' . esc_attr($season_id) . '">
+                                    <td style="padding:4px; color: var(--default_table_text_color)">
+                                        <span>Season ' . esc_html($sn_num) . '</span>
+                                        <span class="tv-toggle tv-toggle-episodes" data-target="episodes" data-season-id="' . esc_attr($season_id) . '">▼</span>
+                                    </td>
+                                    <td style="color: var(--default_table_text_color); padding:4px;">' . esc_html($sn_year) . '</td>
+                                    <td style="padding:4px; color: var(--default_table_text_color);">' . esc_html($sn_count) . '</td>
+                                    <td style="padding:4px; color: var(--default_table_text_color);">' . $sn_summary . '</td>
+                                  </tr>';
+
+                        // Episodes row for this season
+                        $html .= '<tr class="season-episodes-row is-collapsed" data-season-id="' . esc_attr($season_id) . '">
+                                    <td colspan="4" style="padding:4px 4px 8px 20px; ">';
+
+                        if (!empty($episodes)) {
+                            $html .= '<table class="episodes-table" style="width:100%; border-collapse:collapse; margin-top:4px;">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">#</th>
+                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Title</th>
+                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Air Date</th>
+                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Runtime</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>';
+
+                            foreach ($episodes as $ep) {
+                                $html .= '<tr class="episode-row">
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($ep['episode_number'] ?? '') . '</td>
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($ep['episode_title'] ?? '') . '</td>
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($ep['air_date'] ?? '') . '</td>
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($ep['episode_runtime'] ?? '') . '</td>
+                                          </tr>';
+                            }
+
+                            $html .= '        </tbody>
+                                      </table>';
+                        } else {
+                            $html .= '<em>No episodes found for this season.</em>';
+                        }
+
+                        $html .= '      </td>
+                                  </tr>';
+                    }
+
+                    $html .= '    </tbody>
+                              </table>';
+                } else {
+                    $html .= '<em>No seasons found for this show.</em>';
+                }
+
+                $html .= '        </div>
+                            </td>
+                          </tr>';
+                // END NEW nested row
             }
 
             $html .= '</tbody></table></div>';
@@ -316,6 +400,67 @@ if (!function_exists('add_TvShow_table_shortcode'))
 
     // Optional: default sort on load
     // sortTable(sel.value);
+  });
+})();
+</script>';
+
+            // NEW: small CSS for nested rows + toggles
+            $html .= '
+<style>
+  .is-collapsed { display: none; }
+  .tvshow-main-cell { cursor: pointer; }
+  .season-row { cursor: pointer; }
+  .tv-toggle {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 10px;
+    cursor: pointer;
+  }
+  .seasons-wrapper {
+    margin-top: 4px;
+    border-left: 2px solid rgba(255,255,255,0.2);
+    padding-left: 8px;
+  }
+</style>';
+
+            // NEW: JS handler to toggle seasons + episodes
+            $html .= '
+<script>
+(function() {
+  document.addEventListener("click", function(event) {
+    let toggle = event.target.closest(".tv-toggle");
+
+    // If not clicking directly on arrow, see if we clicked the title cell or season row
+    if (!toggle) {
+      const showCell = event.target.closest(".tvshow-main-cell");
+      if (showCell) {
+        toggle = showCell.querySelector(".tv-toggle-seasons");
+      } else {
+        const seasonRow = event.target.closest(".season-row");
+        if (seasonRow) {
+          toggle = seasonRow.querySelector(".tv-toggle-episodes");
+        }
+      }
+      if (!toggle) return;
+    }
+
+    const target = toggle.dataset.target;
+
+    if (target === "seasons") {
+      const showId = toggle.dataset.showId;
+      const row = document.querySelector(\'.tvshow-seasons-row[data-show-id="\' + showId + \'"]\');
+      if (!row) return;
+      const isCollapsed = row.classList.contains("is-collapsed");
+      row.classList.toggle("is-collapsed", !isCollapsed);
+    }
+
+    if (target === "episodes") {
+      const seasonId = toggle.dataset.seasonId;
+      const row = document.querySelector(\'.season-episodes-row[data-season-id="\' + seasonId + \'"]\');
+      if (!row) return;
+      const isCollapsed = row.classList.contains("is-collapsed");
+      row.classList.toggle("is-collapsed", !isCollapsed);
+    }
   });
 })();
 </script>';
