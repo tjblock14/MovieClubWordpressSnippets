@@ -311,7 +311,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                 $user1_episode_rtg_color  = color_rating_cell($user1_episode_rating);
 
                                 $user2_episode_rating = review_value($episode_reviews, $reviewerB, 'rating');
-                                $user1_episode_review = review_value($episode_reviews, $reviewerB, 'review');
+                                $user2_episode_review = review_value($episode_reviews, $reviewerB, 'review');
                                 $user2_episode_id = review_value($episode_reviews, $reviewerB, 'id');
                                 $user2_episode_rtg_color  = color_rating_cell($user2_episode_rating);
 
