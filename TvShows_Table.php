@@ -173,9 +173,9 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $user1_color  = color_rating_cell($user1_rating);
                 $user1_data_reviewer = strtolower($reviewerA);
 
-                $html .= '<td class="rating-cell" data-review-type="tv" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '" data-rating="' . esc_attr($user1_rating) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
+                $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="show" data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '" data-rating="' . esc_attr($user1_rating) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
 
-                $html .= '<td class="review-cell" data-review-type="tv" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '">' . esc_html($user1_review) . '</td>';
+                $html .= '<td class="review-cell" data-review-type="tv" data-target-type="show" data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '">' . esc_html($user1_review) . '</td>';
 
                 // Reviewer B values
                 $user2_rating = review_value($reviews, $reviewerB, 'rating');
@@ -184,9 +184,9 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $user2_color  = color_rating_cell($user2_rating);
                 $user2_data_reviewer = strtolower($reviewerB);
 
-                $html .= '<td class="rating-cell" data-review-type="tv" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '" data-rating="' . esc_attr($user2_rating) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
+                $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="show" data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '" data-rating="' . esc_attr($user2_rating) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
 
-                $html .= '<td class="review-cell" data-review-type="tv" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-TvShow-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '">' . esc_html($user2_review) . '</td>';
+                $html .= '<td class="review-cell" data-review-type="tv" data-target-type="show" data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '">' . esc_html($user2_review) . '</td>';
 
                 // Calculate average rating
                 $avg_rating = (is_numeric($user1_rating) && is_numeric($user2_rating))
@@ -207,56 +207,136 @@ if (!function_exists('add_TvShow_table_shortcode'))
                     $html .= '<table class="seasons-table" style="width:100%; border-collapse:collapse; margin-top:4px;">
                                 <thead>
                                     <tr>
-                                        <th style="text-align:left; padding:4px; color: var(--default_table_text_color);">Season</th>
-                                        <th style="text-align:left; padding:4px; color: var(--default_table_text_color);">Year</th>
-                                        <th style="text-align:left; padding:4px; color: var(--default_table_text_color);">Episodes</th>
-                                        <th style="text-align:left; padding:4px; color: var(--default_table_text_color);">Summary</th>
+                                        <th style="width: 30px; text-align:left; padding:4px; color: var(--default_table_text_color);">Season</th>
+                                        <th style="width: 30px; text-align:left; padding:4px; color: var(--default_table_text_color);">Episodes</th>
+                                        <th style="width: 100px; text-align:left; padding:4px; color: var(--default_table_text_color);">Summary</th>
+                                        <th style="width: 50px; text-align:left; padding:4px; color: var(--default_table_text_color);">Release Year</th>
+                                        <th style="width: 50px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayA) . ' Season Rating</th>
+                                        <th style="width: 100px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayA) . ' Comments</th>
+                                        <th style="width: 50px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayB) . ' Season Rating</th>
+                                        <th style="width: 100px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayB) . ' Comments</th>
+                                        <th style="width: 50px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Season Average</th>
                                     </tr>
                                 </thead>
                                 <tbody>';
 
                     foreach ($seasons as $season) {
                         $season_id  = $season['id'] ?? 0;
-                        $sn_num     = $season['season_number'] ?? '';
-                        $sn_year    = $season['season_release_year'] ?? '';
-                        $sn_count   = $season['season_episode_cnt'] ?? '';
-                        $sn_summary = wp_kses_post($season['summary'] ?? '');
+                        $season_num     = $season['season_number'] ?? '';
+                        $season_ReleaseYr    = $season['season_release_year'] ?? ''; 
+                        $season_episode_count   = $season['season_episode_cnt'] ?? '';
+                        $season_summary = wp_kses_post($season['summary'] ?? ''); # Do this for summary to remove the surrounding <p p>
                         $episodes   = $season['episodes'] ?? [];
+
+                        // Reviews block
+                        $season_reviews = $season['reviews'] ?? [];
+
+                        $user1_season_rating = review_value($season_reviews, $reviewerA, 'rating');
+                        $user1_season_review = review_value($season_reviews, $reviewerA, 'review');
+                        $user1_season_id = review_value($season_reviews, $reviewerA, 'id');
+                        $user1_season_rtg_color  = color_rating_cell($user1_season_rating);
+
+                        $user2_season_rating = review_value($season_reviews, $reviewerB, 'rating');
+                        $user2_season_review = review_value($season_reviews, $reviewerB, 'review');
+                        $user2_season_id = review_value($season_reviews, $reviewerB, 'id');
+                        $user2_season_rtg_color  = color_rating_cell($user2_season_rating);
+
+                        //$user2_season_rating = x;
 
                         // Season row
                         $html .= '<tr class="season-row" data-season-id="' . esc_attr($season_id) . '">
                                     <td style="padding:4px; color: var(--default_table_text_color)">
-                                        <span>Season ' . esc_html($sn_num) . '</span>
+                                        <span>S' . esc_html($season_num) . '</span> 
                                         <span class="tv-toggle tv-toggle-episodes" data-target="episodes" data-season-id="' . esc_attr($season_id) . '">▼</span>
                                     </td>
-                                    <td style="color: var(--default_table_text_color); padding:4px;">' . esc_html($sn_year) . '</td>
-                                    <td style="padding:4px; color: var(--default_table_text_color);">' . esc_html($sn_count) . '</td>
-                                    <td style="padding:4px; color: var(--default_table_text_color);">' . $sn_summary . '</td>
-                                  </tr>';
+                                    <td style="padding:4px; color: var(--default_table_text_color);">' . esc_html($season_episode_count) . '</td>
+                                    <td style="padding:4px; color: var(--default_table_text_color);">' . $season_summary . '</td>
+                                    <td style="color: var(--default_table_text_color); padding:4px;">' . esc_html($season_ReleaseYr) . '</td>';
+                                  
+
+                        $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="season" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_season_id) . '" data-rating="' . esc_attr($user1_season_rating) . '" style="background-color: ' . esc_attr($user1_season_rtg_color) . ';">' . esc_html($user1_season_rating) . '</td>';
+                        $html .= '<td class="review-cell" data-review-type="tv" data-target-type="season" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_season_id) . '">' . esc_html($user1_season_review) . '</td>';
+
+                        $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="season" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_season_id) . '" data-rating="' . esc_attr($user2_season_rating) . '" style="background-color: ' . esc_attr($user2_season_rtg_color) . ';">' . esc_html($user2_season_rating) . '</td>';
+                        $html .= '<td class="review-cell" data-review-type="tv" data-target-type="season" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_season_id) . '">' . esc_html($user2_season_review) . '</td>';
+
+                        // Calculate average rating
+                        $avg_season_rating = (is_numeric($user1_season_rating) && is_numeric($user2_season_rating))
+                                      ? round(($user1_season_rating + $user2_season_rating) / 2, 2) : '';
+                        $avg_season_color = color_rating_cell($avg_season_rating);
+
+                        $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_season_rating) . '" style="background-color: ' . esc_attr($avg_season_color) . ';">' 
+                                  . esc_html($avg_season_rating) . '</td>';
+
+                        $html .= '</tr>';
 
                         // Episodes row for this season
                         $html .= '<tr class="season-episodes-row is-collapsed" data-season-id="' . esc_attr($season_id) . '">
                                     <td colspan="4" style="padding:4px 4px 8px 20px; ">';
 
-                        if (!empty($episodes)) {
+                        if (!empty($episodes)) 
+                        {
                             $html .= '<table class="episodes-table" style="width:100%; border-collapse:collapse; margin-top:4px;">
                                         <thead>
                                             <tr>
-                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">#</th>
+                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Episode</th>
                                                 <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Title</th>
+                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Summary</th>
+                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Runtime (mins)</th>
                                                 <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Air Date</th>
-                                                <th style="text-align:left; padding:3px; color: var(--default_table_text_color);">Runtime</th>
+                                                <th style="width: 50px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayA) . ' Episode Rating</th>
+                                                <th style="width: 100px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayA) . ' Comments</th>
+                                                <th style="width: 50px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayB) . ' Episode Rating</th>
+                                                <th style="width: 100px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayB) . ' Comments</th>
+                                                <th style="width: 50px; font-size: 18px; font-weight: bold; color: var(--default_table_text_color); border-collapse: collapse;">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Episode Average</th>
                                             </tr>
                                         </thead>
                                         <tbody>';
 
-                            foreach ($episodes as $ep) {
+                            foreach ($episodes as $episode) 
+                            {
+                                $episode_id  = $episode['id'] ?? 0;
+                                $episode_number = $episode['episode_number'] ?? '';
+                                $episode_AirDate    = $episode['air_date'] ?? ''; 
+                                $episode_title = $episode['episode_title'] ?? '';
+                                $episode_runtime = $episode['episode_runtime'] ?? '';
+                                $episode_summary = wp_kses_post($episode['summary'] ?? ''); # Do this for summary to remove the surrounding <p p>
+
+                                // Reviews block
+                                $episode_reviews = $episode['reviews'] ?? [];
+
+                                $user1_episode_rating = review_value($episode_reviews, $reviewerA, 'rating');
+                                $user1_episode_review = review_value($episode_reviews, $reviewerA, 'review');
+                                $user1_episode_id = review_value($episode_reviews, $reviewerA, 'id');
+                                $user1_episode_rtg_color  = color_rating_cell($user1_episode_rating);
+
+                                $user2_episode_rating = review_value($episode_reviews, $reviewerB, 'rating');
+                                $user1_episode_review = review_value($episode_reviews, $reviewerB, 'review');
+                                $user2_episode_id = review_value($episode_reviews, $reviewerB, 'id');
+                                $user2_episode_rtg_color  = color_rating_cell($user2_episode_rating);
+
                                 $html .= '<tr class="episode-row">
-                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($ep['episode_number'] ?? '') . '</td>
-                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($ep['episode_title'] ?? '') . '</td>
-                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($ep['air_date'] ?? '') . '</td>
-                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($ep['episode_runtime'] ?? '') . '</td>
-                                          </tr>';
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($episode_number) . '</td>
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($episode_title) . '</td>
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . $episode_summary . '</td>
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($episode_runtime) . '</td>
+                                            <td style="padding:3px; color: var(--default_table_text_color);">' . esc_html($episode_AirDate) . '</td>';
+
+                                $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="episode" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_episode_id) . '" data-rating="' . esc_attr($user1_episode_rating) . '" style="background-color: ' . esc_attr($user1_episode_rtg_color) . ';">' . esc_html($user1_episode_rating) . '</td>';
+                                $html .= '<td class="review-cell" data-review-type="tv" data-target-type="episode" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_episode_id) . '">' . esc_html($user1_episode_review) . '</td>';
+
+                                $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="episode" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_episode_id) . '" data-rating="' . esc_attr($user2_episode_rating) . '" style="background-color: ' . esc_attr($user2_episode_rtg_color) . ';">' . esc_html($user2_episode_rating) . '</td>';
+                                $html .= '<td class="review-cell" data-review-type="tv" data-target-type="episode" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_episode_id) . '">' . esc_html($user2_episode_review) . '</td>';
+
+                              // Calculate average rating
+                              $avg_episode_rating = (is_numeric($user1_episode_rating) && is_numeric($user2_episode_rating))
+                                            ? round(($user1_episode_rating + $user2_episode_rating) / 2, 2) : '';
+                              $avg_episode_color = color_rating_cell($avg_episode_rating);
+
+                              $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_episode_rating) . '" style="background-color: ' . esc_attr($avg_episode_color) . ';">' 
+                                        . esc_html($avg_episode_rating) . '</td>';
+
+                                $html .= '</tr>';
                             }
 
                             $html .= '        </tbody>
