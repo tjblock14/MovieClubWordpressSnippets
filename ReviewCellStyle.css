@@ -1,9 +1,3 @@
 .review-cell {
-  color: black;
-  font-size: 14px;
-  text-align: center;
-  vertical-align: middle;
-  border: 1px solid black;
-  width: 100px;
-  font-weight: bold;
+  width : 200px;
 }

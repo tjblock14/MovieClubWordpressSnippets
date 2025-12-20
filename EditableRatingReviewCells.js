@@ -156,10 +156,7 @@ function toast(msg, ms = 1800) {
   mcToastTimer = setTimeout(() => mcToast.classList.remove("open"), ms);
 }
 
-/* === Rating color helpers ===
-   NOTE: Top bands match your PHP snippet exactly (>=9, >=7.5, >=6).
-   Replace lower thresholds/colors below to match the rest of your PHP function if needed.
-*/
+/* === Rating color helpers === */
 function ratingToBg(r) {
   if (r === "" || r === null || typeof r === "undefined") return "";
   const n = Number(r);
@@ -177,11 +174,8 @@ function ratingToBg(r) {
 
 function applyRatingColorToCell(cell, ratingValue) {
   const bg = ratingToBg(ratingValue);
-
-  // Apply inline so it updates instantly
   cell.style.backgroundColor = bg;
 
-  // Optional: keep text readable on dark greens
   const n = Number(ratingValue);
   if (bg && Number.isFinite(n) && n >= 7.5) {
     cell.style.color = "#ffffff";
@@ -204,6 +198,77 @@ function normalizeTargetType(tt) {
   const v = String(tt || "show").trim().toLowerCase();
   if (v === "show" || v === "season" || v === "episode") return v;
   return "show";
+}
+
+/**
+ * Build a "key" for matching the rating cell + review cell that represent the SAME review row.
+ * - Movies: targetType doesn't matter (often missing), so we treat it as "*" for matching.
+ * - TV: targetType matters (show/season/episode).
+ */
+function getCellKey(cell) {
+  const reviewType = (cell.getAttribute("data-review-type") || cell.dataset.reviewType || "movie").toLowerCase();
+  const reviewer   = (cell.dataset.reviewer || "").toLowerCase();
+  const itemId     = String(cell.dataset.id || "");
+  const rawTT      = (cell.getAttribute("data-target-type") || cell.dataset.targetType || "");
+  const targetType = normalizeTargetType(rawTT);
+
+  return {
+    reviewType,
+    reviewer,
+    itemId,
+    // only meaningful for tv
+    targetType: reviewType === "tv" ? targetType : "*",
+  };
+}
+
+/**
+ * When we POST and get a new review id, apply it to BOTH the rating cell and justification cell
+ * for the same (reviewType, reviewer, itemId, targetType).
+ */
+function setReviewIdForAllMatchingCells(sourceCell, newId) {
+  const key = getCellKey(sourceCell);
+
+  document.querySelectorAll(".rating-cell, .review-cell").forEach((c) => {
+    const k = getCellKey(c);
+
+    const same =
+      k.reviewType === key.reviewType &&
+      k.reviewer === key.reviewer &&
+      k.itemId === key.itemId &&
+      (key.reviewType !== "tv" || k.targetType === key.targetType);
+
+    if (same) {
+      c.dataset.reviewId = String(newId);
+      c.setAttribute("data-review-id", String(newId));
+    }
+  });
+}
+
+/**
+ * If user is trying to create a justification first (no review id exists),
+ * we must include a rating in the POST. Grab it from the matching rating cell.
+ */
+function getMatchingRatingValue(sourceCell) {
+  const key = getCellKey(sourceCell);
+
+  // Find the matching rating cell (same key)
+  const ratingCell = Array.from(document.querySelectorAll(".rating-cell")).find((c) => {
+    const k = getCellKey(c);
+    return (
+      k.reviewType === key.reviewType &&
+      k.reviewer === key.reviewer &&
+      k.itemId === key.itemId &&
+      (key.reviewType !== "tv" || k.targetType === key.targetType)
+    );
+  });
+
+  if (!ratingCell) return null;
+
+  const text = (ratingCell.textContent || "").trim();
+  if (text === "") return null;
+
+  const n = Number(text);
+  return Number.isFinite(n) ? n : null;
 }
 
 function openReviewModal({ cell, reviewer, initialText, titleForModal }) {
@@ -229,7 +294,6 @@ function closeActiveEditor(discard) {
   const input = activeCell.querySelector("input");
   if (input && discard) {
     activeCell.textContent = input.defaultValue || "";
-    // ✅ restore color if rating cell
     if (activeCell.classList.contains("rating-cell")) {
       applyRatingColorToCell(activeCell, activeCell.textContent.trim());
     }
@@ -273,12 +337,12 @@ function makeCellEditable(cell) {
       const clamped = newValue === "" ? "" : Math.max(0, Math.min(10, parseFloat(newValue)));
 
       cell.textContent = clamped; // optimistic UI
-      applyRatingColorToCell(cell, clamped); // ✅ instant color update
+      applyRatingColorToCell(cell, clamped);
 
       const ok = await updateReviewFromCell(cell, "rating", clamped, prev);
       if (!ok) {
-        cell.textContent = prev; // revert on failure
-        applyRatingColorToCell(cell, prev); // ✅ revert color too
+        cell.textContent = prev;
+        applyRatingColorToCell(cell, prev);
         closeActiveEditor(false);
         return;
       }
@@ -308,11 +372,8 @@ function makeCellEditable(cell) {
 }
 
 /**
- * ✅ Key changes vs your current version:
- * - NO alert("Review saved!")
- * - NO hardReload()
  * - Returns true/false so caller can revert cell on failure
- * - ✅ Rating background color updates immediately (handled in caller + also reaffirmed on success below)
+ * - Rating background color updates immediately (handled in caller + also reaffirmed on success below)
  */
 async function updateReviewFromCell(cell, field, newValue, prevValueForRevert = "") {
   const token = localStorage.getItem("access_token");
@@ -346,18 +407,28 @@ async function updateReviewFromCell(cell, field, newValue, prevValueForRevert = 
       ? `https://movieclubdatabase.onrender.com/api/tv-reviews/${existingReviewId}/`
       : `https://movieclubdatabase.onrender.com/api/reviews/${existingReviewId}/`;
 
-    payload[field] = (field === "rating")
-      ? (newValue === "" ? null : parseFloat(newValue))
-      : newValue;
+    // IMPORTANT:
+    // - PATCH should ONLY send the field being changed
+    // - Do NOT send rating:null unless user is actually clearing it (your backend rejects null)
+    if (field === "rating") {
+      const n = (newValue === "" ? null : parseFloat(newValue));
+      if (n === null || !Number.isFinite(n)) {
+        toast("Rating cannot be blank.", 2000);
+        return false;
+      }
+      payload.rating = n;
+    } else {
+      payload.rating_justification = newValue;
+    }
 
-    // ✅ TV PATCH: include exactly one FK target
+    // TV PATCH: include target metadata (if your serializer expects it)
     if (reviewType === "tv") {
       payload.target_type = targetType;
-
       if (targetType === "show") payload.tv_show_type = parseInt(itemId);
       if (targetType === "season") payload.tv_season_type = parseInt(itemId);
       if (targetType === "episode") payload.tv_episode_type = parseInt(itemId);
     }
+
   } else {
     method = "POST";
     url = reviewType === "tv"
@@ -379,16 +450,27 @@ async function updateReviewFromCell(cell, field, newValue, prevValueForRevert = 
 
     // set fields
     if (field === "rating") {
-      payload.rating = (newValue === "" ? null : parseFloat(newValue));
-      payload.rating_justification = "";
+      const n = (newValue === "" ? null : parseFloat(newValue));
+      if (n === null || !Number.isFinite(n)) {
+        toast("Rating cannot be blank.", 2000);
+        return false;
+      }
+      payload.rating = n;
+      payload.rating_justification = ""; // create with empty justification
     } else {
+      // ✅ BIG FIX:
+      // Creating justification-only must include a rating.
+      const ratingNum = getMatchingRatingValue(cell);
+      if (ratingNum === null) {
+        toast("Set a rating first, then add your justification.", 2600);
+        return false;
+      }
+      payload.rating = ratingNum;
       payload.rating_justification = newValue;
-      payload.rating = null;
     }
   }
 
   console.log("Sending review request", { method, url, payload });
-
   toast("Saving…", 1200);
 
   try {
@@ -411,13 +493,13 @@ async function updateReviewFromCell(cell, field, newValue, prevValueForRevert = 
       return false;
     }
 
-    // If we POSTed, store the new review id on the cell so next edit PATCHes
+    // ✅ BIG FIX:
+    // If we POSTed, apply the new review id to BOTH the rating cell and justification cell for this item/reviewer/target.
     if (!existingReviewId && data && data.id) {
-      cell.dataset.reviewId = String(data.id);
-      cell.setAttribute("data-review-id", String(data.id));
+      setReviewIdForAllMatchingCells(cell, data.id);
     }
 
-    // ✅ Re-apply rating color after successful save (covers edge cases)
+    // Re-apply rating color after successful save (covers edge cases)
     if (field === "rating") {
       applyRatingColorToCell(cell, newValue);
     }

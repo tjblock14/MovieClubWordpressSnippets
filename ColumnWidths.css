@@ -1,0 +1,33 @@
+/**********************************************************************
+ * This file contains the widths of the different columns so we can have 
+ * one class that is used multiple places, and also use another to set
+ * the width of the column so each column can be of separate width.
+ **********************************************************************/
+
+ .season-episode-identifier-column {
+  width: 50px;
+}
+
+.season-episode-summary-column {
+  width: 300px;
+}
+
+.episode-title-column {
+  width: 90px;
+}
+
+.show-image-column {
+  width: 100px;
+}
+
+.show-genre-column {
+  width: 50px;
+}
+
+.season-episode-review-column {
+  width: 100px
+}
+
+.episode-runtime-column {
+  width : 50px
+}
