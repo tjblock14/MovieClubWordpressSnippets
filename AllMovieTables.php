@@ -22,12 +22,11 @@ if (!function_exists('color_rating_cell')) {
     function color_rating_cell($rating) {
         if (!is_numeric($rating)) return '';
 
-        if ($rating >= 9.0)                  return "#3C8D40"; // dark green
-        else if ($rating >= 7.5)             return "#5F9F61"; // light green
-        else if ($rating >= 6.0)             return "#A6CDA8"; // very light green
+        if ($rating >= 9.5)                  return "#0096FF"; // Blue
+        else if ($rating >= 8.5)             return "#3C8D40"; // dark green
+        else if ($rating >= 7.0)             return "#5F9F61"; // light green
         else if ($rating >= 5.0)             return "#F3EAA3"; // yellow
         else if ($rating >= 3.5)             return "#EFB45D"; // orange
-        else if ($rating >  1.0)             return "#D7572E"; // light red
         else                                 return "#AC2727"; // dark red
     }
 }

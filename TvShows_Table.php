@@ -22,12 +22,11 @@ if (!function_exists('color_rating_cell')) {
     function color_rating_cell($rating) {
         if (!is_numeric($rating)) return '';
 
-        if ($rating >= 9.0)                  return "#3C8D40"; // dark green
-        else if ($rating >= 7.5)             return "#5F9F61"; // light green
-        else if ($rating >= 6.0)             return "#A6CDA8"; // very light green
+        if ($rating >= 9.5)                  return "#0096FF"; // Blue
+        else if ($rating >= 8.5)             return "#3C8D40"; // dark green
+        else if ($rating >= 7.0)             return "#5F9F61"; // light green
         else if ($rating >= 5.0)             return "#F3EAA3"; // yellow
         else if ($rating >= 3.5)             return "#EFB45D"; // orange
-        else if ($rating >  1.0)             return "#D7572E"; // light red
         else                                 return "#AC2727"; // dark red
     }
 }
@@ -94,20 +93,19 @@ if (!function_exists('add_TvShow_table_shortcode'))
             $displayB = $labelB ?? $reviewerB;
 
             // ===== SORT BAR =====
-            $html = '
-  <div class="TvShow-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
-    <label for="TvShow-sort" style="font-weight:600;">Sort by:</label>
-    <select id="TvShow-sort" class="TvShow-sort">
-      <option value="avg_desc">Couple Average: high → low</option>
-      <option value="avg_asc">Couple Average: low → high</option>
-      <option value="u1_desc">' . esc_html($displayA) . ' rating — high → low</option>
-      <option value="u1_asc">' . esc_html($displayA) . ' rating — low → high</option>
-      <option value="u2_desc">' . esc_html($displayB) . ' rating — high → low</option>
-      <option value="u2_asc">' . esc_html($displayB) . ' rating — low → high</option>
-      <option value="title_az">Title — A → Z</option>
-      <option value="director_az">Director — A → Z</option>
-    </select>
-  </div>';
+            $html = ' <div class="TvShow-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
+                      <label for="TvShow-sort" style="font-weight:600;">Sort by:</label>
+                      <select id="TvShow-sort" class="TvShow-sort">
+                        <option value="avg_desc">Couple Average: high → low</option>
+                        <option value="avg_asc">Couple Average: low → high</option>
+                        <option value="u1_desc">' . esc_html($displayA) . ' rating — high → low</option>
+                        <option value="u1_asc">' . esc_html($displayA) . ' rating — low → high</option>
+                        <option value="u2_desc">' . esc_html($displayB) . ' rating — high → low</option>
+                        <option value="u2_asc">' . esc_html($displayB) . ' rating — low → high</option>
+                        <option value="title_az">Title — A → Z</option>
+                        <option value="director_az">Director — A → Z</option>
+                      </select>
+                    </div>';
 
             // Build table
             $html .= '<div style="overflow-x: auto;">
@@ -122,20 +120,19 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 <th class = "table-title-cells-style show-genre-column">Status</th>
                 <th class = "table-title-cells-style show-genre-column"># of Seasons</th>
                 <th class = "table-title-cells-style">' . esc_html($displayA) . ' Rating</th>
-                <th class = "table-title-cells-style">' . esc_html($displayA) . ' Comments</th>
                 <th class = "table-title-cells-style">' . esc_html($displayB) . ' Rating</th>
-                <th class = "table-title-cells-style">' . esc_html($displayB) . ' Comments</th>
                 <th class = "table-title-cells-style">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
             </tr>
         </thead>
         <tbody>';
 
+            /* Create the row for every TV show in the database */
             foreach ($TvShows as $TvShow)
             {
                 $TvShow_id = $TvShow['id'];
                 $title     = $TvShow['title'] ?? '';
 
-                // NEW: get seasons array for nested rendering
+                /* Fetch the array of seasons for this TV show to prepare for if the dropdown is pressed on this show */
                 $seasons   = $TvShow['seasons'] ?? [];
 
                 $show_summary = wp_kses_post($TvShow['summary'] ?? ''); // remove surrounding <p>
@@ -143,11 +140,12 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 // MAIN SHOW ROW
                 $html .= '<tr class="tvshow-row" data-show-id="' . esc_attr($TvShow_id) . '">'; // NEW class + data attribute
 
-                // Image cell
+                /* Prepare the cell that displays the cover image of the show. */
+                // FIXME: Make this so when it is hovered, it displays the show title incase it isn't clear in the image
                 $html .= '<td class = "table-title-cells-style">'
                             . '<img src="' . esc_url($TvShow['image_url']) . '" alt="' . esc_attr($TvShow['title']) . '" '
-                            . 'style="max-width: 120px; height: auto; border-radius: 4px;" />'
-                            . '</td>';
+                            . 'style="max-width: 120px; height: auto; border-radius: 4px;" />' . 
+                        '</td>';
 
                 $html .= '<td class = "season-episode-small-data-style">' . $show_summary  . '</td>';
                 $html .= '<td class = "season-episode-small-data-style">' . esc_html(safe_implode($TvShow['genres']      ?? '')) . '</td>';
@@ -160,47 +158,63 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $html .= ' <td class = "season-episode-small-data-style">' . esc_html(safe_implode($TvShow['num_seasons'] ?? '')) . 
                          ' <span class="tv-toggle tv-toggle-seasons" data-target="seasons" data-show-id="' . esc_attr($TvShow_id) . '">▼</span>' . '</td>';
 
-                // Reviews block
+                /* Grab the review array for the current Show */
                 $reviews = $TvShow['reviews'] ?? [];
 
-                // Reviewer A values
+                /* Fetch all of the needed values for User 1 */
                 $user1_rating = review_value($reviews, $reviewerA, 'rating');
                 $user1_review = review_value($reviews, $reviewerA, 'review');
                 $user1_id     = review_value($reviews, $reviewerA, 'id');
                 $user1_color  = color_rating_cell($user1_rating);
                 $user1_data_reviewer = strtolower($reviewerA);
 
-                $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="show" data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '" data-rating="' . esc_attr($user1_rating) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
+                /* This cell for each show will hold the rating justification for the review in the cell. Only the rating is displayed      *
+                 * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
+                 * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
+                $html .= '<td class="rating-cell tv-rating-cell season-episode-small-data-style" data-review-type="tv"data-target-type="show"
+                          data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
+                          data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '"
+                          data-rating="' . esc_attr($user1_rating) . '" data-review="' . esc_attr($user1_review) . '"
+                          style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
 
-                $html .= '<td class="season-episode-small-data-style review-cell" data-review-type="tv" data-target-type="show" data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '">' . esc_html($user1_review) . '</td>';
-
-                // Reviewer B values
+                /* Fetch all of the needed values for User 2 */
                 $user2_rating = review_value($reviews, $reviewerB, 'rating');
                 $user2_review = review_value($reviews, $reviewerB, 'review');
                 $user2_id     = review_value($reviews, $reviewerB, 'id');
                 $user2_color  = color_rating_cell($user2_rating);
                 $user2_data_reviewer = strtolower($reviewerB);
 
-                $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="show" data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '" data-rating="' . esc_attr($user2_rating) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
+                /* This cell for each show will hold the rating justification for the review in the cell. Only the rating is displayed      *
+                 * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
+                 * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
+                $html .= '<td class="rating-cell tv-rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="show"
+                          data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
+                          data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '"
+                          data-rating="' . esc_attr($user2_rating) . '" data-review="' . esc_attr($user2_review) . '"
+                          style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
 
-                $html .= '<td class="season-episode-small-data-style review-cell" data-review-type="tv" data-target-type="show" data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '">' . esc_html($user2_review) . '</td>';
-
-                // Calculate average rating
+                /* Calculate the average rating for the current couple and prepare the background color */
                 $avg_rating = (is_numeric($user1_rating) && is_numeric($user2_rating))
                                ? round(($user1_rating + $user2_rating) / 2, 2) : '';
                 $avg_color = color_rating_cell($avg_rating);
 
+                /* Setup and display the average rating cell */
                 $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_rating) . '" style="background-color: ' . esc_attr($avg_color) . ';">' 
                           . esc_html($avg_rating) . '</td>';
 
+                /* We are done with the row */
                 $html .= '</tr>';
 
-                // NEW: NESTED SEASONS + EPISODES ROW (one per show)
+                /*****************************************************************************************************
+                 * Now, we want to prepare the nested Seasons rows for the current Show
+                 *****************************************************************************************************/
                 $html .= '<tr class="tvshow-seasons-row is-collapsed" data-show-id="' . esc_attr($TvShow_id) . '">
                             <td colspan="13" style="padding:0; border: none;">
                                 <div class="seasons-wrapper">';
 
-                if (!empty($seasons)) {
+                if (!empty($seasons)) 
+                {
+                    /* Setup the title row for the seasons */
                     $html .= '<table class="seasons-table" style="width:100%; border-collapse:collapse; margin-top:4px;">
                                 <thead>
                                     <tr>
@@ -209,15 +223,16 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                         <th class = "table-title-cells-style season-episode-summary-column">Summary</th>
                                         <th class = "table-title-cells-style">Release Year</th>
                                         <th class = "table-title-cells-style">' . esc_html($displayA) . ' Season Rating</th>
-                                        <th class = "table-title-cells-style">' . esc_html($displayA) . ' Comments</th>
                                         <th class = "table-title-cells-style">' . esc_html($displayB) . ' Season Rating</th>
-                                        <th class = "table-title-cells-style">' . esc_html($displayB) . ' Comments</th>
                                         <th class = "table-title-cells-style">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Season Average</th>
                                     </tr>
                                 </thead>
                                 <tbody>';
 
-                    foreach ($seasons as $season) {
+                    /* Now, we create the row for each season of this TV Show */
+                    foreach ($seasons as $season) 
+                    {
+                        /* Grab the needed information for the current Season */
                         $season_id  = $season['id'] ?? 0;
                         $season_num     = $season['season_number'] ?? '';
                         $season_ReleaseYr    = $season['season_release_year'] ?? ''; 
@@ -225,20 +240,22 @@ if (!function_exists('add_TvShow_table_shortcode'))
                         $season_summary = wp_kses_post($season['summary'] ?? ''); // remove surrounding <p>
                         $episodes   = $season['episodes'] ?? [];
 
-                        // Reviews block
+                        /* Grab the reviews array for the current Season */
                         $season_reviews = $season['reviews'] ?? [];
 
+                        /* Get all of the needed values for user 1's rating/review cell */
                         $user1_season_rating = review_value($season_reviews, $reviewerA, 'rating');
                         $user1_season_review = review_value($season_reviews, $reviewerA, 'review');
                         $user1_season_id = review_value($season_reviews, $reviewerA, 'id');
                         $user1_season_rtg_color  = color_rating_cell($user1_season_rating);
 
+                        /* Get all of the needed values for user 2's rating/review cell */
                         $user2_season_rating = review_value($season_reviews, $reviewerB, 'rating');
                         $user2_season_review = review_value($season_reviews, $reviewerB, 'review');
                         $user2_season_id = review_value($season_reviews, $reviewerB, 'id');
                         $user2_season_rtg_color  = color_rating_cell($user2_season_rating);
 
-                        // Season row
+                        /* Now, we setup all of the cells in this Season's row */
                         $html .= '<tr class="season-row" data-season-id="' . esc_attr($season_id) . '">
                                     <td class = "season-episode-number-style">
                                         <span>S' . esc_html($season_num) . '</span> 
@@ -248,26 +265,46 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                     <td class = "season-episode-small-data-style">' . $season_summary . '</td>
                                     <td class = "season-episode-small-data-style">' . esc_html($season_ReleaseYr) . '</td>';
 
-                        $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="season" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_season_id) . '" data-rating="' . esc_attr($user1_season_rating) . '" style="background-color: ' . esc_attr($user1_season_rtg_color) . ';">' . esc_html($user1_season_rating) . '</td>';
-                        $html .= '<td class="season-episode-small-data-style review-cell" data-review-type="tv" data-target-type="season" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_season_id) . '">' . esc_html($user1_season_review) . '</td>';
+                        /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
+                         * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
+                         * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
+                        $html .= '<td class="rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="season"
+                                  data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '"
+                                  data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_season_id) . '"
+                                  data-rating="' . esc_attr($user1_season_rating) . '" data-review="' . esc_attr($user1_season_review) . '"
+                                  style="background-color:' . esc_attr($user1_season_rtg_color) . ';">' . esc_html($user1_season_rating) .
+                              '</td>';
 
-                        $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="season" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_season_id) . '" data-rating="' . esc_attr($user2_season_rating) . '" style="background-color: ' . esc_attr($user2_season_rtg_color) . ';">' . esc_html($user2_season_rating) . '</td>';
-                        $html .= '<td class="season-episode-small-data-style review-cell" data-review-type="tv" data-target-type="season" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_season_id) . '">' . esc_html($user2_season_review) . '</td>';
+                        /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
+                         * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
+                         * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
+                        $html .= '<td class="rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="season"
+                                  data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '"
+                                  data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_season_id) . '"
+                                  data-rating="' . esc_attr($user2_season_rating) . '" data-review="' . esc_attr($user2_season_review) . '"
+                                  style="background-color:' . esc_attr($user2_season_rtg_color) . ';">' . esc_html($user2_season_rating) .
+                              '</td>';
 
-                        // Calculate average rating
+                        /* Calculate the average rating for this Season by this couple and get the background color */
                         $avg_season_rating = (is_numeric($user1_season_rating) && is_numeric($user2_season_rating))
                                       ? round(($user1_season_rating + $user2_season_rating) / 2, 2) : '';
                         $avg_season_color = color_rating_cell($avg_season_rating);
 
+                        /* Setup and display the average rating cell */
                         $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_season_rating) . '" style="background-color: ' . esc_attr($avg_season_color) . ';">' 
                                   . esc_html($avg_season_rating) . '</td>';
 
+                        /* We are done with this row */
                         $html .= '</tr>';
 
                         // Episodes row for this season
                         $html .= '<tr class="season-episodes-row is-collapsed" data-season-id="' . esc_attr($season_id) . '">
                                     <td colspan="11" style="padding:4px 4px 8px 20px; ">';
 
+                        
+                        /*****************************************************************************************************
+                         * Now, we want to prepare the nested Episode rows for the current Season
+                         *****************************************************************************************************/
                         if (!empty($episodes)) 
                         {
                             $html .= '<table class="episodes-table" style="width:100%; border-collapse:collapse; margin-top:4px;">
@@ -279,14 +316,13 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                                 <th class = "table-title-cells-style">Runtime (mins)</th>
                                                 <th class = "table-title-cells-style">Air Date</th>
                                                 <th class = "table-title-cells-style">' . esc_html($displayA) . ' Episode Rating</th>
-                                                <th class = "table-title-cells-style">' . esc_html($displayA) . ' Comments</th>
                                                 <th class = "table-title-cells-style">' . esc_html($displayB) . ' Episode Rating</th>
-                                                <th class = "table-title-cells-style">' . esc_html($displayB) . ' Comments</th>
                                                 <th class = "table-title-cells-style">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Episode Average</th>
                                             </tr>
                                         </thead>
                                         <tbody>';
 
+                            /* Now, we create the row for each Episode of this Season */
                             foreach ($episodes as $episode) 
                             {
                                 $episode_id  = $episode['id'] ?? 0;
@@ -316,11 +352,26 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                             <td class = "season-episode-small-data-style episode-runtime-column">' . esc_html($episode_runtime) . '</td>
                                             <td class = "season-episode-small-data-style">' . esc_html($episode_AirDate) . '</td>';
 
-                                $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="episode" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_episode_id) . '" data-rating="' . esc_attr($user1_episode_rating) . '" style="background-color: ' . esc_attr($user1_episode_rtg_color) . ';">' . esc_html($user1_episode_rating) . '</td>';
-                                $html .= '<td class="season-episode-small-data-style review-cell" data-review-type="tv" data-target-type="episode" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_episode_id) . '">' . esc_html($user1_episode_review) . '</td>';
+                                /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
+                                 * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
+                                 * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
+                                $html .= '<td class="rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="episode"
+                                          data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '"
+                                          data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_episode_id) . '"
+                                          data-rating="' . esc_attr($user1_episode_rating) . '" data-review="' . esc_attr($user1_episode_review) . '" data-rating-color="' . esc_attr($user1_episode_rtg_color) .'"
+                                          style="background-color:' . esc_attr($user1_episode_rtg_color) . ';">' . esc_html($user1_episode_rating) .
+                                      '</td>';
 
-                                $html .= '<td class="rating-cell" data-review-type="tv" data-target-type="episode" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_episode_id) . '" data-rating="' . esc_attr($user2_episode_rating) . '" style="background-color: ' . esc_attr($user2_episode_rtg_color) . ';">' . esc_html($user2_episode_rating) . '</td>';
-                                $html .= '<td class="season-episode-small-data-style review-cell" data-review-type="tv" data-target-type="episode" data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_episode_id) . '">' . esc_html($user2_episode_review) . '</td>';
+                                /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
+                                 * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
+                                 * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
+                                $html .= '<td class="rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="episode"
+                                          data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '"
+                                          data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_episode_id) . '"
+                                          data-rating="' . esc_attr($user2_episode_rating) . '" data-review="' . esc_attr($user2_episode_review) . '" data-rating-color="' . esc_attr($user2_episode_rtg_color) .'"
+                                          style="background-color:' . esc_attr($user2_episode_rtg_color) . ';">' . esc_html($user2_episode_rating) .
+                                      '</td>';
+
 
                                 // Calculate average rating
                                 $avg_episode_rating = (is_numeric($user1_episode_rating) && is_numeric($user2_episode_rating))
