@@ -1,118 +1,155 @@
-<div id="tvmaze-search" style="max-width:800px;margin:1rem auto;">
-  <label style="display:block;margin-bottom:.5rem;">Search TV shows</label>
-  <input id="tvq" type="text" placeholder="e.g., Breaking Bad" style="width:100%;padding:.6rem;border:1px solid #ccc;border-radius:.4rem;">
-  <div id="tv-results" style="margin-top:1rem;"></div>
+<!--Container for the whole form, styled in .movie-form-container below-->
+<div class="movie-form-container">
+    <!--The form element, holds input fields and submit button. Styled below in .movie-form and new-movie-form is used to "listen" for a submisison-->
+  <form id="new-movie-form" class="movie-form">
+    <!--Header text-->
+    <h3>Add a New Movie</h3>
+    <!--Background text in each box-->
+    <input type="text" id="title" placeholder="Title" required>
+    <input type="text" id="director" placeholder="Director(s), comma-separated" required>
+    <input type="text" id="actors" placeholder="Starring Actors (comma-separated)" required>
+    <input type="text" id="genres" placeholder="Genres (comma-separated)" required>
+    <button type="submit">Submit Movie</button>
+    
+    <!--Placeholder for the feedback messgae on submission-->
+    <p id="movie-feedback"></p>
+  </form>
 </div>
 
+<style>
+  /*CSS styling of the form container*/
+  .movie-form-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 2px solid #444;
+    border-radius: 12px;
+    background-color: #f4f4f4;
+  }
+
+/* CSS Styling for the input boxes and the submit button*/
+  .movie-form input,
+  .movie-form button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 12px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+  }
+
+/* Extra CSS Styling for the button*/
+  .movie-form button {
+    background-color: #0073e6;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+
+/* When the button is hovered, darken it a few shades*/
+  .movie-form button:hover {
+    background-color: #005bb5;
+  }
+</style>
+
 <script>
-(function () {
-  const input = document.getElementById('tvq');
-  const resultsEl = document.getElementById('tv-results');
-  let t;
+  // Listen for a submission from the form. 
+  document.getElementById('new-movie-form').addEventListener('submit', async function (e) {
+    
+    // Prevent the site from reloading the page upon submission
+    e.preventDefault();
 
-  const API_BASE = 'https://movieclubdatabase.onrender.com';
+    // Get the text entry from each field and store it
+    // Trim removes any trailing spaces
+    const title = document.getElementById('title').value.trim();
+    const directorInput = document.getElementById('director').value.trim();
+    const actorsInput = document.getElementById('actors').value.trim();
+    const genresInput = document.getElementById('genres').value.trim();
+    
+    // Where success and error messages will be shown
+    const feedback = document.getElementById('movie-feedback');
 
-  // 🔑 Use the SAME key you already use for reviews
-  function getAccessToken() {
-    return localStorage.getItem('access_token'); // <-- update if your key is different
-  }
-
-  function stripTags(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html || '';
-    return div.textContent || div.innerText || '';
-  }
-
-  async function importShow(tvmazeId, button) {
-    const token = getAccessToken();
-    if (!token) {
-      alert('Please log in (Movie Club API) before importing shows.');
-      button.disabled = false;
-      button.textContent = 'Select';
-      return;
+    // Make sure there is a value entered in each field
+    if (!title || !directorInput || !actorsInput || !genresInput)
+    {
+      feedback.textContent = "All fields are required.";
+      feedback.style.color = 'red';
+      return; // exit the function to prevent proceeding
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/api/shows/import_from_tvmaze/`, {
+    // Check the local storage for the JWT token
+    const token = localStorage.getItem('access_token');
+    if (!token) // If the user is not logged in, reject the submission
+    {
+      feedback.textContent = "You must be logged in to submit a movie.";
+      feedback.style.color = 'red';
+      return; // exit the function
+    }
+
+    try 
+    {
+      // Send the submission to the api and wait for a response
+      let res = await fetch('https://movieclubdatabase.onrender.com/api/movies/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          'Authorization': 'Bearer ' + token
         },
-        body: JSON.stringify({ tvmaze_id: Number(tvmazeId) })
+        // Format the JSON data that will be sent
+        body: JSON.stringify({
+          title,
+          director: directorInput.split(',').map(d => d.trim()),
+          actors: actorsInput.split(',').map(a => a.trim()),
+          genres: genresInput.split(',').map(g => g.trim())
+        })
       });
 
-      if (!res.ok) {
+      // Hold onto the repsonse for logging
+      console.log('Response status:', res.status);
+      
+      console.log("Payload being submitted:", {
+        title,
+  director: directorInput.split(',').map(d => d.trim()),
+  actors: actorsInput.split(',').map(a => a.trim()),
+  genres: genresInput.split(',').map(g => g.trim())
+});
+
+      // If it was all a success, print out success message
+      // In the future we will want to redirect to page depending on who submitted
+      if (res.ok) 
+      {
+        feedback.textContent = "Movie submitted successfully!";
+        feedback.style.color = 'green';
+        document.getElementById('new-movie-form').reset(); // clear the formn
+      } 
+      else // handle the error
+      {
         const text = await res.text();
-        throw new Error(`Import failed (${res.status}): ${text}`);
-      }
-
-      const show = await res.json();
-      button.textContent = 'Added ✓';
-      button.style.cursor = 'default';
-    } catch (err) {
-      console.error(err);
-      alert('Import error: ' + err.message);
-      button.disabled = false;
-      button.textContent = 'Select';
+        console.log('Raw server response:', text);
+        try 
+        {
+          const errorData = JSON.parse(text);
+          if (res.status === 409 || errorData.duplicate) 
+          {
+              feedback.textContent = "Error: Duplicate";
+            } 
+          else 
+          {
+              feedback.textContent = "Error: " + JSON.stringify(errorData);
+          }
+        } 
+        catch (e) 
+        {
+            feedback.textContent = "Server returned non-JSON error: " + text.slice(0, 100);
+          }
+          feedback.style.color = 'red';
+        }
+    } 
+    catch (err) // handle any external errors like a network or server issue
+    {
+      console.error('Fetch error:', err);
+      feedback.textContent = "Something went wrong: " + err.message;
+      feedback.style.color = 'red';
     }
-  }
-
-  function render(items) {
-    if (!items || !items.length) {
-      resultsEl.innerHTML = '<p>No results.</p>';
-      return;
-    }
-
-    resultsEl.innerHTML = items.map(({ show }) => {
-      const img = (show.image && (show.image.medium || show.image.original)) || '';
-      const genres = (show.genres || []).join(', ');
-      const year = (show.premiered || '').slice(0, 4);
-      const summary = stripTags(show.summary || '').slice(0, 180);
-      return `
-        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;align-items:flex-start;">
-          <img src="${img}" alt="" style="width:70px;height:96px;object-fit:cover;border-radius:6px;background:#f2f2f2;">
-          <div style="flex:1;">
-            <div style="font-weight:600">${show.name || 'Untitled'} ${year ? `(${year})` : ''}</div>
-            <div style="font-size:.9rem;color:#666">${genres}</div>
-            <div style="font-size:.9rem;margin:.3rem 0;">${summary}${summary.length === 180 ? '…' : ''}</div>
-            <button data-id="${show.id}" class="tv-select" style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:.4rem;background:#fff;cursor:pointer;">
-              Select
-            </button>
-          </div>
-        </div>`;
-    }).join('');
-
-    resultsEl.querySelectorAll('.tv-select').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        btn.disabled = true;
-        btn.textContent = 'Adding…';
-        importShow(id, btn);
-      });
-    });
-  }
-
-  async function searchTvMaze(q) {
-    if (!q) {
-      resultsEl.innerHTML = '';
-      return;
-    }
-    resultsEl.innerHTML = '<p>Searching…</p>';
-    try {
-      const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(q)}`);
-      if (!res.ok) throw new Error('TVMaze search failed');
-      const data = await res.json();
-      render(data);
-    } catch (err) {
-      console.error(err);
-      resultsEl.innerHTML = '<p style="color:#b00;">Error searching TVMaze.</p>';
-    }
-  }
-
-  input.addEventListener('input', () => {
-    clearTimeout(t);
-    t = setTimeout(() => searchTvMaze(input.value.trim()), 350);
   });
-})();
 </script>
