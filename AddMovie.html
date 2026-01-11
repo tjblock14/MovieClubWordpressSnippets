@@ -1,0 +1,138 @@
+<div id="tmdb-search" style="max-width:800px;margin:1rem auto;">
+  <label style="display:block;margin-bottom:.5rem;">Search Movies</label>
+  <input id="mq" type="text" placeholder="e.g., The Dark Knight" style="width:100%;padding:.6rem;border:1px solid #ccc;border-radius:.4rem;">
+  <div id="m-results" style="margin-top:1rem;"></div>
+
+  <!-- Optional TMDB credit/disclaimer area -->
+  <div style="font-size:12px; margin-top:8px; opacity:0.7;">
+    This product uses the TMDB API but is not endorsed or certified by TMDB.
+  </div>
+</div>
+
+<script>
+(function () {
+  const input = document.getElementById('mq');
+  const resultsEl = document.getElementById('m-results');
+  let t;
+
+  const API_BASE = 'https://movieclubdatabase.onrender.com';
+
+  // ✅ Put your TMDB key here
+  const TMDB_API_KEY = 'PASTE_YOUR_TMDB_KEY_HERE';
+
+  // TMDB images
+  const TMDB_IMG = 'https://image.tmdb.org/t/p/w185';
+
+  function getAccessToken() {
+    return localStorage.getItem('access_token');
+  }
+
+  function stripTags(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return div.textContent || div.innerText || '';
+  }
+
+  async function importMovie(tmdbId, button) {
+    const token = getAccessToken();
+    if (!token) {
+      alert('Please log in (Movie Club API) before importing movies.');
+      button.disabled = false;
+      button.textContent = 'Select';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/api/movies/import_from_tmdb/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tmdb_id: Number(tmdbId) })
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Import failed (${res.status}): ${text}`);
+      }
+
+      const movie = await res.json();
+      button.textContent = 'Added ✓';
+      button.style.cursor = 'default';
+    } catch (err) {
+      console.error(err);
+      alert('Import error: ' + err.message);
+      button.disabled = false;
+      button.textContent = 'Select';
+    }
+  }
+
+  function render(items) {
+    if (!items || !items.length) {
+      resultsEl.innerHTML = '<p>No results.</p>';
+      return;
+    }
+
+    resultsEl.innerHTML = items.map((m) => {
+      const title = m.title || m.original_title || 'Untitled';
+      const year = (m.release_date || '').slice(0, 4);
+      const img = m.poster_path ? (TMDB_IMG + m.poster_path) : '';
+      const summary = (m.overview || '').slice(0, 180);
+
+      return `
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;align-items:flex-start;">
+          <img src="${img}" alt="" style="width:70px;height:96px;object-fit:cover;border-radius:6px;background:#f2f2f2;">
+          <div style="flex:1;">
+            <div style="font-weight:600">${title} ${year ? `(${year})` : ''}</div>
+            <div style="font-size:.9rem;margin:.3rem 0;">${summary}${summary.length === 180 ? '…' : ''}</div>
+            <button data-id="${m.id}" class="m-select" style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:.4rem;background:#fff;cursor:pointer;">
+              Select
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+
+    resultsEl.querySelectorAll('.m-select').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        btn.disabled = true;
+        btn.textContent = 'Adding…';
+        importMovie(id, btn);
+      });
+    });
+  }
+
+  async function searchTMDB(q) {
+    if (!q) {
+      resultsEl.innerHTML = '';
+      return;
+    }
+    if (!TMDB_API_KEY || TMDB_API_KEY.includes('PASTE_')) {
+      resultsEl.innerHTML = '<p style="color:#b00;">Missing TMDB API key.</p>';
+      return;
+    }
+
+    resultsEl.innerHTML = '<p>Searching…</p>';
+
+    try {
+      // Search endpoint
+      const url = `https://api.themoviedb.org/3/search/movie?api_key=${encodeURIComponent(TMDB_API_KEY)}&query=${encodeURIComponent(q)}&include_adult=false`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('TMDB search failed');
+      const data = await res.json();
+
+      // data.results is the movie list
+      render(data.results || []);
+    } catch (err) {
+      console.error(err);
+      resultsEl.innerHTML = '<p style="color:#b00;">Error searching TMDB.</p>';
+    }
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => searchTMDB(input.value.trim()), 350);
+  });
+})();
+</script>

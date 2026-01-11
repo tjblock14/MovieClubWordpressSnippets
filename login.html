@@ -1,0 +1,180 @@
+<div class="custom-login-container">
+  <form id="api-login-form" class="custom-login-form">
+    <h3>Log In</h3>
+    <!-- Username input field -->
+    <input type="text" id="username" placeholder="Username" required>
+    
+    <!-- Password input field -->
+    <input type="password" id="password" placeholder="Password" required>
+    
+    <button type="submit">Log In</button>
+    
+    <!-- Location where error or success message is shown -->
+    <p id="login-feedback"></p>
+  </form>
+</div>
+
+<style>
+    /* CSS styling of the box */
+  .custom-login-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    background-color: #f9f9f9;
+  }
+
+    /* CSS styling of the header text*/
+  .custom-login-form h3 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+    /* CSS styling of the inputs*/
+  .custom-login-form input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    font-size: 16px;
+  }
+
+    /* CSS styling of the button*/
+  .custom-login-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #0073e6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+    /* When hovering the button, darken it*/
+  .custom-login-form button:hover {
+    background-color: #C7374A;
+  }
+
+    /* CSS styling of the login feedback*/ 
+  #login-feedback {
+    text-align: center;
+    margin-top: 10px;
+    font-weight: bold;
+  }
+</style>
+
+
+<!--Start of Java Script login handler-->
+<script>
+  // Create a function that will run when the login form is submitted
+  document.getElementById('api-login-form').addEventListener('submit', async function (e) {
+      
+    // Do not reload the page when the form is submitted
+    e.preventDefault();
+
+    // Get the values from the input fields, remove any extra spaces
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value.trim();
+    
+    // Will be used to style and set the feedback paragraph element
+    const feedback = document.getElementById('login-feedback');
+
+
+    function parseJwt (token) {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+}
+
+    try {
+      // Make a POST request to the django API to get a JWT token (JSON Web Token)
+      // This token is a way to prove someone's identity between wordpress frontend and the backend
+      const res = await fetch('https://movieclubdatabase.onrender.com/api/token/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }, // Sending JSON to server
+        body: JSON.stringify({ username, password }) // Send the login data
+      });
+
+      // If the login is successul (HTTP 200)
+      if (res.ok) {
+        const data = await res.json(); // Get the token data from the response
+        
+        // Store the login tokens in local storage so that they are 
+        // available on all pages
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+        
+        const decoded_data = parseJwt(data.access);
+        localStorage.setItem("username", decoded_data.username);
+        
+        // ✅ Decode the access token to extract the username
+        const decoded = parseJwt(data.access);
+        if (decoded && decoded.username) {
+          localStorage.setItem('username', decoded.username);
+        }
+
+        console.log("Login successful:", decoded);
+        
+        console.log("Login response:", data);
+
+        
+        // Display to the user that their login was successful
+        feedback.textContent = 'Login successful!';
+        feedback.style.color = 'green';
+        
+        // After a successful login, redirect to movie page, maybe add condition statement later to direct to movie table page depending on who logged in
+        if((decoded.username == "trevor") || (decoded.username == "taylor"))
+        {
+            window.location.href = "tnt_reviews";
+        }
+        else if((decoded.username == "marissa") || (decoded.username == "nathan"))
+        {
+            window.location.href = "mn_reviews";
+        }
+        else if((decoded.username == "sierra") || (decoded.username == "benett"))
+        {
+            window.location.href = "sb_reviews";
+        }
+        else if((decoded.username == "terry") || (decoded.username == "rob"))
+        {
+            window.location.href = "mom_dad_reviews";
+        }
+        else if((decoded.username == "mia") || (decoded.username == "logan"))
+        {
+            window.location.href = "mia_logan_reviews";
+        }
+        else if((decoded.username == "annie") || (decoded.username == "felix"))
+        {
+            window.location.href = "af-movies";
+        }
+        else
+        {
+            window.location.href = "/add-movie";
+        }
+      } 
+      else // Login failed
+      {
+        // Let the user know that the login was unsuccessful
+        feedback.textContent = 'Invalid username or password.';
+        feedback.style.color = 'red';
+      }
+    } 
+    catch (error) // Something externally went wrong like network error, etc
+    {
+      feedback.textContent = 'Login failed. Please try again.';
+      feedback.style.color = 'red';
+    }
+  });
+</script>
+
