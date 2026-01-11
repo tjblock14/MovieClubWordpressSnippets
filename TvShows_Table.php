@@ -70,7 +70,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
     function add_TvShow_table_shortcode(string $shortcode, string $endpoint, string $reviewerA, string $reviewerB, ?string $labelA = null, ?string $labelB = null) 
     {
 
-        add_shortcode($shortcode, function() use ($endpoint, $reviewerA, $reviewerB, $labelA, $labelB) 
+        add_shortcode($shortcode, function() use ($endpoint, $reviewerA, $reviewerB, $labelA, $labelB, $couple_slug) 
         {
 
             // Fetch data from your configured WPGetAPI connection
@@ -113,12 +113,12 @@ if (!function_exists('add_TvShow_table_shortcode'))
         <thead>
             <tr>
                 <th class = "table-title-cells-style show-image-column">Image</th>
-                <th class = "table-title-cells-style season-episode-summary-column">Summary</th>
-                <th class = "table-title-cells-style show-genre-column">Genres</th>
-                <th class = "table-title-cells-style show-image-column">Premiered</th>
-                <th class = "table-title-cells-style show-genre-column">Creators</th>
-                <th class = "table-title-cells-style show-genre-column">Status</th>
-                <th class = "table-title-cells-style show-genre-column"># of Seasons</th>
+                <th class = "table-title-cells-style summary-column-width">Summary</th>
+                <th class = "table-title-cells-style short-info-column">Genres</th>
+                <th class = "table-title-cells-style show-image-column-width">Premiered</th>
+                <th class = "table-title-cells-style short-info-column-width">Creators</th>
+                <th class = "table-title-cells-style short-info-column-width">Status</th>
+                <th class = "table-title-cells-style short-info-column-width"># of Seasons</th>
                 <th class = "table-title-cells-style">' . esc_html($displayA) . ' Rating</th>
                 <th class = "table-title-cells-style">' . esc_html($displayB) . ' Rating</th>
                 <th class = "table-title-cells-style">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
@@ -147,15 +147,15 @@ if (!function_exists('add_TvShow_table_shortcode'))
                             . 'style="max-width: 120px; height: auto; border-radius: 4px;" />' . 
                         '</td>';
 
-                $html .= '<td class = "season-episode-small-data-style">' . $show_summary  . '</td>';
-                $html .= '<td class = "season-episode-small-data-style">' . esc_html(safe_implode($TvShow['genres']      ?? '')) . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . $show_summary  . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . esc_html(safe_implode($TvShow['genres']      ?? '')) . '</td>';
 
-                $html .= '<td class = "season-episode-small-data-style">' . esc_html(safe_implode($TvShow['premiered']   ?? '')) . '</td>';
-                $html .= '<td class = "season-episode-small-data-style">' . esc_html(safe_implode($TvShow['creators']    ?? '')) . '</td>';
-                $html .= '<td class = "season-episode-small-data-style">' . esc_html(safe_implode($TvShow['status']      ?? '')) . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . esc_html(safe_implode($TvShow['premiered']   ?? '')) . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . esc_html(safe_implode($TvShow['creators']    ?? '')) . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . esc_html(safe_implode($TvShow['status']      ?? '')) . '</td>';
 
                 /* This column contains the dropdown arrow to view seasons of a show */
-                $html .= ' <td class = "season-episode-small-data-style">' . esc_html(safe_implode($TvShow['num_seasons'] ?? '')) . 
+                $html .= ' <td class = "tables-small-data-style">' . esc_html(safe_implode($TvShow['num_seasons'] ?? '')) . 
                          ' <span class="tv-toggle tv-toggle-seasons" data-target="seasons" data-show-id="' . esc_attr($TvShow_id) . '">▼</span>' . '</td>';
 
                 /* Grab the review array for the current Show */
@@ -171,8 +171,8 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 /* This cell for each show will hold the rating justification for the review in the cell. Only the rating is displayed      *
                  * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
                  * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
-                $html .= '<td class="rating-cell tv-rating-cell season-episode-small-data-style" data-review-type="tv"data-target-type="show"
-                          data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
+                $html .= '<td class="rating-cell tv-rating-cell tables-small-data-style" data-review-type="tv"data-target-type="show"
+                          data-couple-slug="' . esc_attr($couple_slug) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
                           data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '"
                           data-rating="' . esc_attr($user1_rating) . '" data-review="' . esc_attr($user1_review) . '"
                           style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
@@ -187,8 +187,8 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 /* This cell for each show will hold the rating justification for the review in the cell. Only the rating is displayed      *
                  * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
                  * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
-                $html .= '<td class="rating-cell tv-rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="show"
-                          data-couple-slug="TrevorTaylor" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
+                $html .= '<td class="rating-cell tv-rating-cell tables-small-data-style" data-review-type="tv" data-target-type="show"
+                          data-couple-slug="' . esc_attr($couple_slug) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
                           data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '"
                           data-rating="' . esc_attr($user2_rating) . '" data-review="' . esc_attr($user2_review) . '"
                           style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
@@ -220,7 +220,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                     <tr>
                                         <th class = "table-title-cells-style season-episode-identifier-column">Season</th>
                                         <th class = "table-title-cells-style">Episodes</th>
-                                        <th class = "table-title-cells-style season-episode-summary-column">Summary</th>
+                                        <th class = "table-title-cells-style summary-column-width">Summary</th>
                                         <th class = "table-title-cells-style">Release Year</th>
                                         <th class = "table-title-cells-style">' . esc_html($displayA) . ' Season Rating</th>
                                         <th class = "table-title-cells-style">' . esc_html($displayB) . ' Season Rating</th>
@@ -262,14 +262,14 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                         <span class="tv-toggle tv-toggle-episodes" data-target="episodes" data-season-id="' . esc_attr($season_id) . '">▼</span>
                                     </td>
                                     <td class = "season-episode-number-style">' . esc_html($season_episode_count) . '</td>
-                                    <td class = "season-episode-small-data-style">' . $season_summary . '</td>
-                                    <td class = "season-episode-small-data-style">' . esc_html($season_ReleaseYr) . '</td>';
+                                    <td class = "tables-small-data-style">' . $season_summary . '</td>
+                                    <td class = "tables-small-data-style">' . esc_html($season_ReleaseYr) . '</td>';
 
                         /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
                          * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
                          * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
-                        $html .= '<td class="rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="season"
-                                  data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '"
+                        $html .= '<td class="rating-cell tables-small-data-style" data-review-type="tv" data-target-type="season"
+                                  data-couple-slug="' . esc_attr($couple_slug) . '" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '"
                                   data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_season_id) . '"
                                   data-rating="' . esc_attr($user1_season_rating) . '" data-review="' . esc_attr($user1_season_review) . '"
                                   style="background-color:' . esc_attr($user1_season_rtg_color) . ';">' . esc_html($user1_season_rating) .
@@ -278,8 +278,8 @@ if (!function_exists('add_TvShow_table_shortcode'))
                         /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
                          * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
                          * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
-                        $html .= '<td class="rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="season"
-                                  data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '"
+                        $html .= '<td class="rating-cell tables-small-data-style" data-review-type="tv" data-target-type="season"
+                                  data-couple-slug="' . esc_attr($couple_slug) . '" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '"
                                   data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_season_id) . '"
                                   data-rating="' . esc_attr($user2_season_rating) . '" data-review="' . esc_attr($user2_season_review) . '"
                                   style="background-color:' . esc_attr($user2_season_rtg_color) . ';">' . esc_html($user2_season_rating) .
@@ -312,7 +312,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                             <tr>
                                                 <th class = "table-title-cells-style season-episode-identifier-column">Episode</th>
                                                 <th class = "table-title-cells-style episode-title-column">Title</th>
-                                                <th class = "table-title-cells-style season-episode-summary-column">Summary</th>
+                                                <th class = "table-title-cells-style summary-column-width">Summary</th>
                                                 <th class = "table-title-cells-style">Runtime (mins)</th>
                                                 <th class = "table-title-cells-style">Air Date</th>
                                                 <th class = "table-title-cells-style">' . esc_html($displayA) . ' Episode Rating</th>
@@ -347,16 +347,16 @@ if (!function_exists('add_TvShow_table_shortcode'))
 
                                 $html .= '<tr class="episode-row">
                                             <td class = "season-episode-number-style">' . esc_html($episode_number) . '</td>
-                                            <td class = "season-episode-small-data-style">' . esc_html($episode_title) . '</td>
-                                            <td class = "season-episode-small-data-style">' . $episode_summary . '</td>
-                                            <td class = "season-episode-small-data-style episode-runtime-column">' . esc_html($episode_runtime) . '</td>
-                                            <td class = "season-episode-small-data-style">' . esc_html($episode_AirDate) . '</td>';
+                                            <td class = "tables-small-data-style">' . esc_html($episode_title) . '</td>
+                                            <td class = "tables-small-data-style">' . $episode_summary . '</td>
+                                            <td class = "tables-small-data-style episode-runtime-column">' . esc_html($episode_runtime) . '</td>
+                                            <td class = "tables-small-data-style">' . esc_html($episode_AirDate) . '</td>';
 
                                 /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
                                  * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
                                  * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
-                                $html .= '<td class="rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="episode"
-                                          data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '"
+                                $html .= '<td class="rating-cell tables-small-data-style" data-review-type="tv" data-target-type="episode"
+                                          data-couple-slug="' . esc_attr($couple_slug) . '" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '"
                                           data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_episode_id) . '"
                                           data-rating="' . esc_attr($user1_episode_rating) . '" data-review="' . esc_attr($user1_episode_review) . '" data-rating-color="' . esc_attr($user1_episode_rtg_color) .'"
                                           style="background-color:' . esc_attr($user1_episode_rtg_color) . ';">' . esc_html($user1_episode_rating) .
@@ -365,8 +365,8 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                 /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
                                  * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
                                  * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
-                                $html .= '<td class="rating-cell season-episode-small-data-style" data-review-type="tv" data-target-type="episode"
-                                          data-couple-slug="TrevorTaylor" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '"
+                                $html .= '<td class="rating-cell tables-small-data-style" data-review-type="tv" data-target-type="episode"
+                                          data-couple-slug="' . esc_attr($couple_slug) . '" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '"
                                           data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_episode_id) . '"
                                           data-rating="' . esc_attr($user2_episode_rating) . '" data-review="' . esc_attr($user2_episode_review) . '" data-rating-color="' . esc_attr($user2_episode_rtg_color) .'"
                                           style="background-color:' . esc_attr($user2_episode_rtg_color) . ';">' . esc_html($user2_episode_rating) .
@@ -633,16 +633,19 @@ if (!function_exists('add_TvShow_table_shortcode'))
  *******************************************************/
 
 // Trevor / Taylor
-add_TvShow_table_shortcode('tnt_tv_show_table', 'tnt_tv_reviews', 'Trevor', 'Taylor');
+add_TvShow_table_shortcode('tnt_tv_show_table', 'tnt_tv_reviews', 'Trevor', 'Taylor', 'TrevorTaylor');
 
 // Marissa / Nathan
-add_TvShow_table_shortcode('mn_tv_show_table', 'mn_tv_reviews', 'Marissa', 'Nathan');
+add_TvShow_table_shortcode('mn_tv_show_table', 'mn_tv_reviews', 'Marissa', 'Nathan', 'MarissaNathan');
 
 // Sierra / Benett
-add_TvShow_table_shortcode('sb_tv_show_table', 'sb_tv_reviews', 'Sierra', 'Benett');
+add_TvShow_table_shortcode('sb_tv_show_table', 'sb_tv_reviews', 'Sierra', 'Benett', 'SierraBenett');
 
 // Dad (Rob) / Mom (Terry)
-add_TvShow_table_shortcode('mom_dad_tv_show_table', 'mom_dad_tv_reviews', 'Rob', 'Terry', 'Dad', 'Mom');
+add_TvShow_table_shortcode('mom_dad_tv_show_table', 'mom_dad_tv_reviews', 'Rob', 'Terry', 'Dad', 'Mom', 'MomDad');
 
 // Mia and Logan
-add_TvShow_table_shortcode('mia_logan_tv_show_table', 'mia_logan_tv_reviews', 'Mia', 'Logan');
+add_TvShow_table_shortcode('mia_logan_tv_show_table', 'mia_logan_tv_reviews', 'Mia', 'Logan', 'Mia', 'Logan', 'MiaLogan');
+
+// Annie
+add_TvShow_table_shortcode('af_tv_show_table', 'af_tv_reviews', 'Annie', 'Felix', 'Annie', 'Felix', 'AnnieFelix');

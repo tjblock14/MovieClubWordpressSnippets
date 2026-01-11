@@ -20,7 +20,7 @@
   color      : var(--default_table_text_color);
 }
 
-.season-episode-small-data-style {
+.tables-small-data-style {
   text-align    :center;
   vertical-align: middle;
   font-size  : 14px;

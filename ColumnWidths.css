@@ -8,8 +8,12 @@
   width: 50px;
 }
 
-.season-episode-summary-column {
+.summary-column-width {
   width: 500px;
+}
+
+.actors-column-width {
+  width : 150px;
 }
 
 .episode-title-column {
@@ -20,7 +24,7 @@
   width: 100px;
 }
 
-.show-genre-column {
+.short-info-column-width {
   width: 50px;
 }
 

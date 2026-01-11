@@ -114,15 +114,16 @@ if (!function_exists('add_movie_table_shortcode'))
    <table id="movie-table" data-user1="' . esc_attr(strtolower($reviewerA)) . '" data-user2="' . esc_attr(strtolower($reviewerB)) . '" style="border-collapse: collapse; min-width: 1400px; font-size: 14px; border: 2px solid black;">
         <thead>
             <tr>
-                <th style="width: 150px; text-align: center; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">Title</th>
-                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">Director</th>
-                <th style="width: 250px; text-align: center; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">Actors</th>
-                <th style="width: 200px; text-align: center; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">Genres</th>
-                <th style="width: 100px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayA) . ' Rating</th>
-                <th style="width: 600px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayA) . ' Review</th>
-                <th style="width: 100px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayB) . ' Rating</th>
-                <th style="width: 600px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayB) . ' Review</th>
-				<th style = "width: 150px; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
+                <th class = "table-title-cells-style">Title</th>
+                <th class = "table-title-cells-style summary-column-width">Summary</th>
+                <th class = "table-title-cells-style short-info-column-width">Director</th>
+                <th class = "table-title-cells-style actors-column-width">Actors</th>
+                <th class = "table-title-cells-style short-info-column-width">Genres</th>
+                <th class = "table-title-cells-style short-info-column-width">Release Year</th>
+                <th class = "table-title-cells-style short-info-column-width">Runtime</th>
+                <th class = "table-title-cells-style">' . esc_html($displayA) . ' Rating</th>
+                <th class = "table-title-cells-style">' . esc_html($displayB) . ' Rating</th>
+				        <th class = "table-title-cells-style">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
             </tr>
         </thead>
         <tbody>';
@@ -132,14 +133,31 @@ if (!function_exists('add_movie_table_shortcode'))
                 $movie_id = $movie['movie_id'];
                 $title    = $movie['title'] ?? '';
 
+                $release_yr = $movie['release_yr'];
+                $runtime    = $movie['runtime'];
+                $summary    = $movie['summary'];
+
                 $html .= '<tr>';
 
                 // Title / Director / Actors / Genres
                 // (added classes for sorting: title-cell, director-cell)
-                $html .= '<td class="title-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 18px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html($title) . '</td>';
-                $html .= '<td class="director-cell" style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($movie['director'] ?? '')) . 							 '</td>';
-                $html .= '<td style="width: 250px; text-align: center; vertical-align: middle; font-size: 14px; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($movie['actors'] ?? '')) . '</td>';
-                $html .= '<td style="width: 200px; text-align: center; vertical-align: middle; font-size: 14px; font-weight: bold; border-collapse: collapse; border: 1px solid black;">' . esc_html(safe_implode($movie['genres'] 							 ?? '')) . '</td>';
+                /* Prepare the cell that displays the cover image of the show. */
+                // FIXME: Make this so when it is hovered, it displays the show title incase it isn't clear in the image
+                $html .= '<td class="table-title-cells-style">
+                            <div class="movie-poster-tooltip" data-title="' . esc_attr($movie['title']) . '">
+                                <img src="' . esc_url($movie['poster_url']) . '" 
+                                    alt="' . esc_attr($movie['title']) . '" 
+                                    style="max-width:120px;height:auto;border-radius:4px;" />
+                            </div>
+                          </td>';
+
+                $html .= '<td class = "tables-small-data-style">' . esc_html($summary) . '</td>';
+
+                $html .= '<td class = "tables-small-data-style">' . esc_html(safe_implode($movie['director'] ?? '')) . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . esc_html(safe_implode($movie['actors'] ?? '')) . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . esc_html(safe_implode($movie['genres'] 							 ?? '')) . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . esc_html($release_yr) . '</td>';
+                $html .= '<td class = "tables-small-data-style">' . esc_html($runtime) . '</td>';
 
                 // Reviews block
                 $reviews = $movie['reviews'] ?? [];
@@ -152,9 +170,7 @@ if (!function_exists('add_movie_table_shortcode'))
                 $user1_data_reviewer = strtolower($reviewerA); // match your JS which uses lowercase usernames
 
                 // (fixed a tiny spacing bug: ensure a space before data-rating)
-                $html .= '<td class="rating-cell" data-review-type="movie" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . 						   '" data-rating="' . esc_attr($user1_rating) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
-
-                $html .= '<td class="review-cell" data-review-type="movie" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . 							'">' . esc_html($user1_review) . '</td>';
+                $html .= '<td class="rating-cell tables-small-data-style" data-review-type="movie" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id = "' . esc_attr($user1_id) . '" data-rating = "' . esc_attr($user1_rating) . '"  data-review="' . esc_attr($user1_review) . '" style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
 
                 // Reviewer B values
                 $user2_rating = review_value($reviews, $reviewerB, 'rating');
@@ -163,9 +179,7 @@ if (!function_exists('add_movie_table_shortcode'))
                 $user2_color  = color_rating_cell($user2_rating);
                 $user2_data_reviewer = strtolower($reviewerB);
 
-                $html .= '<td class="rating-cell" data-review-type="movie" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							'" data-rating="' . esc_attr($user2_rating) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
-
-                $html .= '<td class="review-cell" data-review-type="movie" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							   '">' . esc_html($user2_review) . '</td>';
+                $html .= '<td class="rating-cell tables-small-data-style" data-review-type="movie" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . 							'" data-rating="' . esc_attr($user2_rating) . '" data-review="' . esc_attr($user2_review) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
 				
 				// Calculate average rating (only if both are numeric)
 				$avg_rating = (is_numeric($user1_rating) && is_numeric($user2_rating))
@@ -175,7 +189,7 @@ if (!function_exists('add_movie_table_shortcode'))
 				$avg_color = color_rating_cell($avg_rating);
 
                 // (added: avg-cell class + data-rating for sorting; keep it visible)
-				$html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_rating) . '" style="background-color: ' . esc_attr($avg_color) . ';">' 
+				$html .= '<td class="avg-cell rating-cell tables-small-data-style" data-rating="' . esc_attr($avg_rating) . '" style="background-color: ' . esc_attr($avg_color) . ';">' 
       					  .	esc_html($avg_rating) . '</td>';
 
 
@@ -305,6 +319,31 @@ if (!function_exists('add_movie_table_shortcode'))
 })();
 </script>';
 
+/* This section displays the TMDM logo at the bottom of the tables with a short message. This is the attribution */
+$html .= '
+<div class="tmdb-attribution" style="
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    margin-top:10px;
+    font-size:12px;
+    color:#aaa;
+    text-align:center;
+">
+    <img 
+        src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_long_1-8ba2ac31f354005783fab473602c34c3f4fd207150182061e425d366e4f34596.svg"
+        alt="The Movie Database (TMDB)"
+        style="height:10px;"
+        loading="lazy"
+    />
+    <span>
+        The Movie portion of TnT Movie Club uses the TMDB API but is not endorsed or certified by TMDB.
+    </span>
+</div>';
+
+
+
             return $html;
         });
     }
@@ -329,3 +368,6 @@ add_movie_table_shortcode('mom_dad_table', 'mom_dad_reviews', 'Rob', 'Terry', 'D
 
 // Mia and Logan
 add_movie_table_shortcode('mia_logan_table', 'mia_logan_reviews', 'Mia', 'Logan');
+
+// Annie and Felix
+add_movie_table_shortcode('af_movie_table', 'af_reviews', 'Annie', 'Felix');

@@ -23,7 +23,7 @@ add_shortcode('club_average_table', function() {
     if (!is_array($data) || !isset($data['results']) || !is_array($data['results'])) {
         return '<p>Error: No data returned</p>';
     }
-    $rows = $data['results'];
+    $movies = $data['results'];
 
     // Sort bar (client-side)
     $html = '
@@ -44,25 +44,27 @@ add_shortcode('club_average_table', function() {
   <table id="club-avg-table" style="border-collapse:collapse; min-width:1100px; font-size:14px; border:2px solid black;">
     <thead>
       <tr>
-        <th style="width:200px; text-align:center; font-size:18px; font-weight:bold; border:1px solid black;">Title</th>
-        <th style="width:200px; text-align:center; font-size:18px; font-weight:bold; border:1px solid black;">Director</th>
-        <th style="width:250px; text-align:center; font-size:18px; font-weight:bold; border:1px solid black;">Actors</th>
-        <th style="width:200px; text-align:center; font-size:18px; font-weight:bold; border:1px solid black;">Genres</th>
-        <th style="width:120px; text-align:center; font-size:18px; font-weight:bold; border:1px solid black;">Club Average</th>
-        <th style="width:120px; text-align:center; font-size:18px; font-weight:bold; border:1px solid black;"># Reviews</th>
+        <th class = "table-title-cells-style">Movie</th>
+        <th class = "table-title-cells-style summary-column-width">Summary</th>
+        <th class = "table-title-cells-style short-info-column-width">Director</th>
+        <th class = "table-title-cells-style actors-column-width">Actors</th>
+        <th class = "table-title-cells-style short-info-column-width">Genres</th>
+        <th class = "table-title-cells-style">Club Average</th>
+        <th class = "table-title-cells-style"># Reviews</th>
       </tr>
     </thead>
     <tbody>';
 
-    foreach ($rows as $r) {
+    foreach ($movies as $movie) {
         $title    = $r['title'] ?? '';
         // Your backend might send 'director' or 'directors' (JSONField). Normalize:
-        $director = club_safe_implode($r['director'] ?? ($r['directors'] ?? ''));
-        $actors   = club_safe_implode($r['actors'] ?? '');
-        $genres   = club_safe_implode($r['genres'] ?? '');
+        $director = club_safe_implode($movie['director'] ?? ($movie['directors'] ?? ''));
+        $actors   = club_safe_implode($movie['actors'] ?? '');
+        $genres   = club_safe_implode($movie['genres'] ?? '');
+        $summary = $movie['summary'] ?? '';
 
-        $avg      = isset($r['avg_rating']) ? (float)$r['avg_rating'] : null;
-        $count    = (int)($r['num_reviews'] ?? 0);
+        $avg      = isset($movie['avg_rating']) ? (float)$movie['avg_rating'] : null;
+        $count    = (int)($movie['num_reviews'] ?? 0);
 
         $avg_color = function_exists('color_rating_cell') ? color_rating_cell($avg) : '';
 
@@ -73,15 +75,22 @@ add_shortcode('club_average_table', function() {
           data-sort-avg="'     . esc_attr($avg !== null ? $avg : -1) . '"
           data-sort-count="'   . esc_attr($count) . '">';
 
-        $html .= '<td class="title-cell"    style="border:1px solid black; padding:6px; text-align:center; font-weight:bold;">' . esc_html($title)    . '</td>';
-        $html .= '<td class="director-cell" style="border:1px solid black; padding:6px; text-align:center;">'                  . esc_html($director) . '</td>';
-        $html .= '<td                         style="border:1px solid black; padding:6px; text-align:center;">'                  . esc_html($actors)   . '</td>';
-        $html .= '<td                         style="border:1px solid black; padding:6px; text-align:center; font-weight:bold;">' . esc_html($genres)   . '</td>';
+        $html .= '<td class="table-title-cells-style">
+                            <div class="movie-poster-tooltip" data-title="' . esc_attr($movie['title']) . '">
+                                <img src="' . esc_url($movie['poster_url']) . '" 
+                                    alt="' . esc_attr($movie['title']) . '" 
+                                    style="max-width:120px;height:auto;border-radius:4px;" />
+                            </div>
+                          </td>';
+        $html .= '<td class = "tables-small-data-style">' . esc_html($summary) . '</td>';
+        $html .= '<td class = "tables-small-data-style">' . esc_html($director) . '</td>';
+        $html .= '<td class = "tables-small-data-style">' . esc_html($actors) . '</td>';
+        $html .= '<td class = "tables-small-data-style">' . esc_html($genres) . '</td>';
 
-        $html .= '<td class="avg-cell" data-rating="' . esc_attr($avg !== null ? $avg : '') . '" style="border:1px solid black; padding:6px; text-align:center; background-color:' . esc_attr($avg_color) . ';">'
+        $html .= '<td class="avg-cell tables-small-data-style" data-rating="' . esc_attr($avg !== null ? $avg : '') . '" style="border:1px solid black; padding:6px; text-align:center; background-color:' . esc_attr($avg_color) . ';">'
               .     esc_html($avg !== null ? number_format($avg, 2) : '') . '</td>';
 
-        $html .= '<td style="border:1px solid black; padding:6px; text-align:center;">' . esc_html($count) . '</td>';
+        $html .= '<td class = "tables-small-data-style">' . esc_html($count) . '</td>';
 
         $html .= '</tr>';
     }
@@ -127,6 +136,29 @@ add_shortcode('club_average_table', function() {
   });
 })();
 </script>';
+
+/* This section displays the TMDM logo at the bottom of the tables with a short message. This is the attribution */
+$html .= '
+<div class="tmdb-attribution" style="
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
+    margin-top:10px;
+    font-size:12px;
+    color:#aaa;
+    text-align:center;
+">
+    <img 
+        src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_long_1-8ba2ac31f354005783fab473602c34c3f4fd207150182061e425d366e4f34596.svg"
+        alt="The Movie Database (TMDB)"
+        style="height:10px;"
+        loading="lazy"
+    />
+    <span>
+        The Movie portion of TnT Movie Club uses the TMDB API but is not endorsed or certified by TMDB.
+    </span>
+</div>';
 
     return $html;
 });

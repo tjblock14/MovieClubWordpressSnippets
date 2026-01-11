@@ -34,6 +34,26 @@ document.addEventListener("DOMContentLoaded", () => {
     .blocked-cell { }
     .editing-cell { outline: 3px solid #4f46e5; outline-offset: -3px; }
 
+    /* ==============================
+     * Justification indicator icon
+     * - shows when cell has justification
+     * ============================== */
+    .rating-cell { position: relative; }
+    .rating-cell.has-justification::after {
+      content: "✎";              /* <-- change icon here (e.g. "📝", "★", "●") */
+      position: absolute;
+      right: 4px;
+      bottom: 3px;
+      font-size: 11px;
+      line-height: 1;
+      opacity: 0.85;
+      pointer-events: none;
+      padding: 1px 4px;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.35);
+      color: #fff;
+    }
+
     .mc-toast {
       position: fixed;
       right: 18px;
@@ -178,6 +198,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // IMPORTANT: keep color synced + update data-rating-color
     applyRatingColorToCell(cell, String(ratingNum));
 
+    // ✅ update icon immediately
+    syncJustificationMarker(cell);
+
     const ok = await saveRatingAndJustification(cell, ratingNum, justification);
 
     if (!ok) {
@@ -187,6 +210,10 @@ document.addEventListener("DOMContentLoaded", () => {
       cell.dataset.ratingColor = prevColor;
       cell.textContent = prevRating;
       applyRatingColorToCell(cell, prevRating);
+
+      // ✅ restore icon state on revert
+      syncJustificationMarker(cell);
+
       return;
     }
 
@@ -209,12 +236,13 @@ document.addEventListener("DOMContentLoaded", () => {
     cell.addEventListener("click", () => openRatingReviewModalFromCell(cell));
   });
 
-  // Apply colors on initial load:
-  // - If PHP provided data-rating-color, we keep it.
-  // - Otherwise we compute it.
+  // Apply colors + icon on initial load
   document.querySelectorAll(".rating-cell").forEach((cell) => {
     const v = (cell.dataset.rating ?? cell.textContent ?? "").trim();
     applyRatingColorToCell(cell, v);
+
+    // ✅ icon state on load
+    syncJustificationMarker(cell);
   });
 });
 
@@ -227,16 +255,41 @@ function toast(msg, ms = 1800) {
   mcToastTimer = setTimeout(() => mcToast.classList.remove("open"), ms);
 }
 
+/* ==============================
+ * Justification indicator logic
+ * - Uses rating cell data-review if present
+ * - Falls back to matching .review-cell in the same <tr>
+ * ============================== */
+function syncJustificationMarker(cell) {
+  let justification = (cell.dataset.review || "").trim();
+
+  // Fallback: If rating cell doesn't carry the review yet, grab it from same row.
+  // This makes the icon show on initial page load for old rows too.
+  if (!justification) {
+    const row = cell.closest("tr");
+    if (row) {
+      const reviewer = (cell.dataset.reviewer || "").trim();
+      if (reviewer) {
+        const reviewCell = row.querySelector(`.review-cell[data-reviewer="${reviewer}"]`);
+        if (reviewCell) justification = (reviewCell.textContent || "").trim();
+      }
+    }
+  }
+
+  if (justification) cell.classList.add("has-justification");
+  else cell.classList.remove("has-justification");
+}
+
 /* === Rating color helpers === */
 function ratingToBg(r) {
   if (r === "" || r === null || typeof r === "undefined") return "";
   const n = Number(r);
   if (n >= 9.5)                  return "#0096FF"; // Blue
-        else if (n >= 8.5)             return "#3C8D40"; // dark green
-        else if (n >= 7.0)             return "#5F9F61"; // light green
-        else if (n >= 5.0)             return "#F3EAA3"; // yellow
-        else if (n >= 3.5)             return "#EFB45D"; // orange
-        else                                 return "#AC2727"; // dark red
+  else if (n >= 8.5)             return "#3C8D40"; // dark green
+  else if (n >= 7.0)             return "#5F9F61"; // light green
+  else if (n >= 5.0)             return "#F3EAA3"; // yellow
+  else if (n >= 3.5)             return "#EFB45D"; // orange
+  else                           return "#AC2727"; // dark red
 }
 
 function applyRatingColorToCell(cell, ratingValue) {
@@ -426,7 +479,6 @@ function openRatingReviewModalFromCell(cell) {
   // Populate editable inputs
   if (ratingInput) {
     ratingInput.value = rating || "";
-    // ✅ This is the line you wanted: popout text becomes cell color
     if (ratingColor) ratingInput.style.color = ratingColor;
   }
   if (reviewTextarea) reviewTextarea.value = review || "";
@@ -453,7 +505,6 @@ function openRatingReviewModalFromCell(cell) {
     sub.textContent = `Reviewer: ${reviewer || "?"}${tt ? ` • Target: ${tt}` : ""}${rt ? ` • Type: ${rt}` : ""}`;
   }
 
-  // OPEN modal
   mcBackdrop.classList.add("open");
   mcModal.classList.add("open");
 }

@@ -1,155 +1,138 @@
-<!--Container for the whole form, styled in .movie-form-container below-->
-<div class="movie-form-container">
-    <!--The form element, holds input fields and submit button. Styled below in .movie-form and new-movie-form is used to "listen" for a submisison-->
-  <form id="new-movie-form" class="movie-form">
-    <!--Header text-->
-    <h3>Add a New Movie</h3>
-    <!--Background text in each box-->
-    <input type="text" id="title" placeholder="Title" required>
-    <input type="text" id="director" placeholder="Director(s), comma-separated" required>
-    <input type="text" id="actors" placeholder="Starring Actors (comma-separated)" required>
-    <input type="text" id="genres" placeholder="Genres (comma-separated)" required>
-    <button type="submit">Submit Movie</button>
-    
-    <!--Placeholder for the feedback messgae on submission-->
-    <p id="movie-feedback"></p>
-  </form>
+<div id="tmdb-search" style="max-width:800px;margin:1rem auto;">
+  <label style="display:block;margin-bottom:.5rem;">Search Movies</label>
+  <input id="mq" type="text" placeholder="e.g., The Dark Knight" style="width:100%;padding:.6rem;border:1px solid #ccc;border-radius:.4rem;">
+  <div id="m-results" style="margin-top:1rem;"></div>
+
+  <!-- Optional TMDB credit/disclaimer area -->
+  <div style="font-size:12px; margin-top:8px; opacity:0.7;">
+    This product uses the TMDB API but is not endorsed or certified by TMDB.
+  </div>
 </div>
 
-<style>
-  /*CSS styling of the form container*/
-  .movie-form-container {
-    max-width: 500px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 2px solid #444;
-    border-radius: 12px;
-    background-color: #f4f4f4;
-  }
-
-/* CSS Styling for the input boxes and the submit button*/
-  .movie-form input,
-  .movie-form button {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 12px;
-    font-size: 16px;
-    border-radius: 6px;
-    border: 1px solid #aaa;
-  }
-
-/* Extra CSS Styling for the button*/
-  .movie-form button {
-    background-color: #0073e6;
-    color: white;
-    border: none;
-    cursor: pointer;
-  }
-
-/* When the button is hovered, darken it a few shades*/
-  .movie-form button:hover {
-    background-color: #005bb5;
-  }
-</style>
-
 <script>
-  // Listen for a submission from the form. 
-  document.getElementById('new-movie-form').addEventListener('submit', async function (e) {
-    
-    // Prevent the site from reloading the page upon submission
-    e.preventDefault();
+(function () {
+  const input = document.getElementById('mq');
+  const resultsEl = document.getElementById('m-results');
+  let t;
 
-    // Get the text entry from each field and store it
-    // Trim removes any trailing spaces
-    const title = document.getElementById('title').value.trim();
-    const directorInput = document.getElementById('director').value.trim();
-    const actorsInput = document.getElementById('actors').value.trim();
-    const genresInput = document.getElementById('genres').value.trim();
-    
-    // Where success and error messages will be shown
-    const feedback = document.getElementById('movie-feedback');
+  const API_BASE = 'https://movieclubdatabase.onrender.com';
 
-    // Make sure there is a value entered in each field
-    if (!title || !directorInput || !actorsInput || !genresInput)
-    {
-      feedback.textContent = "All fields are required.";
-      feedback.style.color = 'red';
-      return; // exit the function to prevent proceeding
+  // ✅ Put your TMDB key here
+  const TMDB_API_KEY = 'PASTE_YOUR_TMDB_KEY_HERE';
+
+  // TMDB images
+  const TMDB_IMG = 'https://image.tmdb.org/t/p/w185';
+
+  function getAccessToken() {
+    return localStorage.getItem('access_token');
+  }
+
+  function stripTags(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return div.textContent || div.innerText || '';
+  }
+
+  async function importMovie(tmdbId, button) {
+    const token = getAccessToken();
+    if (!token) {
+      alert('Please log in (Movie Club API) before importing movies.');
+      button.disabled = false;
+      button.textContent = 'Select';
+      return;
     }
 
-    // Check the local storage for the JWT token
-    const token = localStorage.getItem('access_token');
-    if (!token) // If the user is not logged in, reject the submission
-    {
-      feedback.textContent = "You must be logged in to submit a movie.";
-      feedback.style.color = 'red';
-      return; // exit the function
-    }
-
-    try 
-    {
-      // Send the submission to the api and wait for a response
-      let res = await fetch('https://movieclubdatabase.onrender.com/api/movies/', {
+    try {
+      const res = await fetch(`${API_BASE}/api/movies/import_from_tmdb/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
+          'Authorization': `Bearer ${token}`,
         },
-        // Format the JSON data that will be sent
-        body: JSON.stringify({
-          title,
-          director: directorInput.split(',').map(d => d.trim()),
-          actors: actorsInput.split(',').map(a => a.trim()),
-          genres: genresInput.split(',').map(g => g.trim())
-        })
+        body: JSON.stringify({ tmdb_id: Number(tmdbId) })
       });
 
-      // Hold onto the repsonse for logging
-      console.log('Response status:', res.status);
-      
-      console.log("Payload being submitted:", {
-        title,
-  director: directorInput.split(',').map(d => d.trim()),
-  actors: actorsInput.split(',').map(a => a.trim()),
-  genres: genresInput.split(',').map(g => g.trim())
-});
-
-      // If it was all a success, print out success message
-      // In the future we will want to redirect to page depending on who submitted
-      if (res.ok) 
-      {
-        feedback.textContent = "Movie submitted successfully!";
-        feedback.style.color = 'green';
-        document.getElementById('new-movie-form').reset(); // clear the formn
-      } 
-      else // handle the error
-      {
+      if (!res.ok) {
         const text = await res.text();
-        console.log('Raw server response:', text);
-        try 
-        {
-          const errorData = JSON.parse(text);
-          if (res.status === 409 || errorData.duplicate) 
-          {
-              feedback.textContent = "Error: Duplicate";
-            } 
-          else 
-          {
-              feedback.textContent = "Error: " + JSON.stringify(errorData);
-          }
-        } 
-        catch (e) 
-        {
-            feedback.textContent = "Server returned non-JSON error: " + text.slice(0, 100);
-          }
-          feedback.style.color = 'red';
-        }
-    } 
-    catch (err) // handle any external errors like a network or server issue
-    {
-      console.error('Fetch error:', err);
-      feedback.textContent = "Something went wrong: " + err.message;
-      feedback.style.color = 'red';
+        throw new Error(`Import failed (${res.status}): ${text}`);
+      }
+
+      const movie = await res.json();
+      button.textContent = 'Added ✓';
+      button.style.cursor = 'default';
+    } catch (err) {
+      console.error(err);
+      alert('Import error: ' + err.message);
+      button.disabled = false;
+      button.textContent = 'Select';
     }
+  }
+
+  function render(items) {
+    if (!items || !items.length) {
+      resultsEl.innerHTML = '<p>No results.</p>';
+      return;
+    }
+
+    resultsEl.innerHTML = items.map((m) => {
+      const title = m.title || m.original_title || 'Untitled';
+      const year = (m.release_date || '').slice(0, 4);
+      const img = m.poster_path ? (TMDB_IMG + m.poster_path) : '';
+      const summary = (m.overview || '').slice(0, 180);
+
+      return `
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;align-items:flex-start;">
+          <img src="${img}" alt="" style="width:70px;height:96px;object-fit:cover;border-radius:6px;background:#f2f2f2;">
+          <div style="flex:1;">
+            <div style="font-weight:600">${title} ${year ? `(${year})` : ''}</div>
+            <div style="font-size:.9rem;margin:.3rem 0;">${summary}${summary.length === 180 ? '…' : ''}</div>
+            <button data-id="${m.id}" class="m-select" style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:.4rem;background:#fff;cursor:pointer;">
+              Select
+            </button>
+          </div>
+        </div>`;
+    }).join('');
+
+    resultsEl.querySelectorAll('.m-select').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        btn.disabled = true;
+        btn.textContent = 'Adding…';
+        importMovie(id, btn);
+      });
+    });
+  }
+
+  async function searchTMDB(q) {
+    if (!q) {
+      resultsEl.innerHTML = '';
+      return;
+    }
+    if (!TMDB_API_KEY || TMDB_API_KEY.includes('PASTE_')) {
+      resultsEl.innerHTML = '<p style="color:#b00;">Missing TMDB API key.</p>';
+      return;
+    }
+
+    resultsEl.innerHTML = '<p>Searching…</p>';
+
+    try {
+      // Search endpoint
+      const url = `https://api.themoviedb.org/3/search/movie?api_key=${encodeURIComponent(TMDB_API_KEY)}&query=${encodeURIComponent(q)}&include_adult=false`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('TMDB search failed');
+      const data = await res.json();
+
+      // data.results is the movie list
+      render(data.results || []);
+    } catch (err) {
+      console.error(err);
+      resultsEl.innerHTML = '<p style="color:#b00;">Error searching TMDB.</p>';
+    }
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => searchTMDB(input.value.trim()), 350);
   });
+})();
 </script>
