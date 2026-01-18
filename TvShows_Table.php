@@ -1,9 +1,13 @@
 <?php
 /*******************************************************
- * Movie Club – Consolidated Table Shortcodes (Single File)
+ * TV Show Club – Consolidated Table Shortcodes (Single File)
  * - Define once, reuse for each couple via parameters.
  * - Keeps your current table structure & styling.
+ * - Adds fixed-height scroll wrapper (≈5 rows) so horizontal scrollbar is always reachable.
+ * - Sticky header inside the scroll container with SOLID background + persistent bottom divider line.
+ * - Prevents table sticky header from overlapping your site dropdown menus (isolated stacking context).
  *******************************************************/
+
 /**
  * Safely implode arrays from API fields into comma-separated strings.
  * (Kept from your original code; guarded so it won't redeclare.)
@@ -58,21 +62,31 @@ if (!function_exists('review_value')) {
 /**
  * Core: register one shortcode for a couple’s table.
  *
- * @param string $shortcode   The shortcode name to register (e.g., 'tnt_table')
- * @param string $endpoint    WPGetAPI endpoint key (e.g., 'tnt_reviews')
+ * PARAM ORDER (IMPORTANT):
+ *  - $couple_slug is REQUIRED because your JS uses it for PATCH/POST routing.
+ *
+ * @param string $shortcode   The shortcode name to register (e.g., 'tnt_tv_show_table')
+ * @param string $endpoint    WPGetAPI endpoint key (e.g., 'tnt_tv_reviews')
  * @param string $reviewerA   Reviewer A key as used by your API (e.g., 'Trevor' or 'rob')
  * @param string $reviewerB   Reviewer B key as used by your API (e.g., 'Taylor' or 'terry')
+ * @param string $couple_slug Slug as stored in backend (e.g., 'TrevorTaylor')
  * @param string|null $labelA Optional display label for A (e.g., 'Dad'); defaults to $reviewerA
  * @param string|null $labelB Optional display label for B (e.g., 'Mom'); defaults to $reviewerB
  */
-if (!function_exists('add_TvShow_table_shortcode')) 
+if (!function_exists('add_TvShow_table_shortcode'))
 {
-    function add_TvShow_table_shortcode(string $shortcode, string $endpoint, string $reviewerA, string $reviewerB, ?string $labelA = null, ?string $labelB = null) 
+    function add_TvShow_table_shortcode(
+        string $shortcode,
+        string $endpoint,
+        string $reviewerA,
+        string $reviewerB,
+        string $couple_slug,
+        ?string $labelA = null,
+        ?string $labelB = null
+    )
     {
-
-        add_shortcode($shortcode, function() use ($endpoint, $reviewerA, $reviewerB, $labelA, $labelB, $couple_slug) 
+        add_shortcode($shortcode, function() use ($endpoint, $reviewerA, $reviewerB, $labelA, $labelB, $couple_slug)
         {
-
             // Fetch data from your configured WPGetAPI connection
             $data = wpgetapi_endpoint('movie_club_database_api', $endpoint, [
                 'return' => 'body',
@@ -92,8 +106,69 @@ if (!function_exists('add_TvShow_table_shortcode'))
             $displayA = $labelA ?? $reviewerA;
             $displayB = $labelB ?? $reviewerB;
 
+            /********************************************************************
+             * INLINE CSS: scroll wrapper + sticky header (SOLID + divider line)
+             ********************************************************************/
+            $html = '
+<style>
+  /* The scroll viewport: shows ~5 rows then scrolls */
+  .mc-table-scroll-wrapper {
+    /* Center the viewport */
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+    display: block;
+
+    /* Scrolling */
+    max-height: 700px;            /* tweak for #rows visible */
+    overflow-y: auto;
+    overflow-x: auto;
+
+    /* Border/frame */
+    border: 2px solid black;
+    border-radius: 4px;
+
+    -webkit-overflow-scrolling: touch;
+
+    /* IMPORTANT: isolate stacking so site dropdowns render above */
+    position: relative;
+    isolation: isolate;
+    z-index: 0;
+  }
+
+  /* Keep your table behavior */
+  .mc-table-scroll-wrapper table {
+    width: max-content;
+    border-collapse: collapse;
+    font-size: 14px;
+    border: none;                 /* border is on wrapper */
+  }
+
+  /* Make thead itself non-transparent */
+  .mc-table-scroll-wrapper thead,
+  .mc-table-scroll-wrapper thead tr {
+    background-color: #3a0f14;    /* your maroon */
+  }
+
+  /* Sticky header cells */
+  .mc-table-scroll-wrapper thead th.table-title-cells-style {
+    position: sticky;
+    top: 0;
+    z-index: 5;                   /* above body cells */
+
+    /* MUST be opaque to stop bleed-through */
+    background-color: #3a0f14;
+    background-clip: padding-box;
+
+    /* Sticky-safe bottom divider line that ALWAYS stays visible */
+    border-bottom: none !important;
+    box-shadow: inset 0 -1px 0 var(--default_table_text_color);
+  }
+</style>
+';
+
             // ===== SORT BAR =====
-            $html = ' <div class="TvShow-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
+            $html .= ' <div class="TvShow-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
                       <label for="TvShow-sort" style="font-weight:600;">Sort by:</label>
                       <select id="TvShow-sort" class="TvShow-sort">
                         <option value="avg_desc">Couple Average: high → low</option>
@@ -107,8 +182,8 @@ if (!function_exists('add_TvShow_table_shortcode'))
                       </select>
                     </div>';
 
-            // Build table
-            $html .= '<div style="overflow-x: auto;">
+            // Build table (WRAPPED in mc-table-scroll-wrapper)
+            $html .= '<div class="mc-table-scroll-wrapper">
    <table id="TvShow-table" data-user1="' . esc_attr(strtolower($reviewerA)) . '" data-user2="' . esc_attr(strtolower($reviewerB)) . '" style="border-collapse: collapse; width: max-content; font-size: 14px; border: var(--default_table_text_color);">
         <thead>
             <tr>
@@ -141,10 +216,10 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $html .= '<tr class="tvshow-row" data-show-id="' . esc_attr($TvShow_id) . '">'; // NEW class + data attribute
 
                 /* Prepare the cell that displays the cover image of the show. */
-                // FIXME: Make this so when it is hovered, it displays the show title incase it isn't clear in the image
+                // FIXME: Make this so when it is hovered, it displays the show title incase it isn\'t clear in the image
                 $html .= '<td class = "table-title-cells-style">'
                             . '<img src="' . esc_url($TvShow['image_url']) . '" alt="' . esc_attr($TvShow['title']) . '" '
-                            . 'style="max-width: 120px; height: auto; border-radius: 4px;" />' . 
+                            . 'style="max-width: 120px; height: auto; border-radius: 4px;" />' .
                         '</td>';
 
                 $html .= '<td class = "tables-small-data-style">' . $show_summary  . '</td>';
@@ -155,7 +230,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $html .= '<td class = "tables-small-data-style">' . esc_html(safe_implode($TvShow['status']      ?? '')) . '</td>';
 
                 /* This column contains the dropdown arrow to view seasons of a show */
-                $html .= ' <td class = "tables-small-data-style">' . esc_html(safe_implode($TvShow['num_seasons'] ?? '')) . 
+                $html .= ' <td class = "tables-small-data-style">' . esc_html(safe_implode($TvShow['num_seasons'] ?? '')) .
                          ' <span class="tv-toggle tv-toggle-seasons" data-target="seasons" data-show-id="' . esc_attr($TvShow_id) . '">▼</span>' . '</td>';
 
                 /* Grab the review array for the current Show */
@@ -168,10 +243,8 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $user1_color  = color_rating_cell($user1_rating);
                 $user1_data_reviewer = strtolower($reviewerA);
 
-                /* This cell for each show will hold the rating justification for the review in the cell. Only the rating is displayed      *
-                 * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
-                 * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
-                $html .= '<td class="rating-cell tv-rating-cell tables-small-data-style" data-review-type="tv"data-target-type="show"
+                /* This cell for each show will hold the rating justification for the review in the cell. */
+                $html .= '<td class="rating-cell tv-rating-cell tables-small-data-style" data-review-type="tv" data-target-type="show"
                           data-couple-slug="' . esc_attr($couple_slug) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
                           data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '"
                           data-rating="' . esc_attr($user1_rating) . '" data-review="' . esc_attr($user1_review) . '"
@@ -184,9 +257,6 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $user2_color  = color_rating_cell($user2_rating);
                 $user2_data_reviewer = strtolower($reviewerB);
 
-                /* This cell for each show will hold the rating justification for the review in the cell. Only the rating is displayed      *
-                 * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
-                 * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
                 $html .= '<td class="rating-cell tv-rating-cell tables-small-data-style" data-review-type="tv" data-target-type="show"
                           data-couple-slug="' . esc_attr($couple_slug) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
                           data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '"
@@ -199,7 +269,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $avg_color = color_rating_cell($avg_rating);
 
                 /* Setup and display the average rating cell */
-                $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_rating) . '" style="background-color: ' . esc_attr($avg_color) . ';">' 
+                $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_rating) . '" style="background-color: ' . esc_attr($avg_color) . ';">'
                           . esc_html($avg_rating) . '</td>';
 
                 /* We are done with the row */
@@ -212,7 +282,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
                             <td colspan="13" style="padding:0; border: none;">
                                 <div class="seasons-wrapper">';
 
-                if (!empty($seasons)) 
+                if (!empty($seasons))
                 {
                     /* Setup the title row for the seasons */
                     $html .= '<table class="seasons-table" style="width:100%; border-collapse:collapse; margin-top:4px;">
@@ -230,12 +300,12 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                 <tbody>';
 
                     /* Now, we create the row for each season of this TV Show */
-                    foreach ($seasons as $season) 
+                    foreach ($seasons as $season)
                     {
                         /* Grab the needed information for the current Season */
                         $season_id  = $season['id'] ?? 0;
                         $season_num     = $season['season_number'] ?? '';
-                        $season_ReleaseYr    = $season['season_release_year'] ?? ''; 
+                        $season_ReleaseYr    = $season['season_release_year'] ?? '';
                         $season_episode_count   = $season['season_episode_cnt'] ?? '';
                         $season_summary = wp_kses_post($season['summary'] ?? ''); // remove surrounding <p>
                         $episodes   = $season['episodes'] ?? [];
@@ -258,16 +328,13 @@ if (!function_exists('add_TvShow_table_shortcode'))
                         /* Now, we setup all of the cells in this Season's row */
                         $html .= '<tr class="season-row" data-season-id="' . esc_attr($season_id) . '">
                                     <td class = "season-episode-number-style">
-                                        <span>S' . esc_html($season_num) . '</span> 
+                                        <span>S' . esc_html($season_num) . '</span>
                                         <span class="tv-toggle tv-toggle-episodes" data-target="episodes" data-season-id="' . esc_attr($season_id) . '">▼</span>
                                     </td>
                                     <td class = "season-episode-number-style">' . esc_html($season_episode_count) . '</td>
                                     <td class = "tables-small-data-style">' . $season_summary . '</td>
                                     <td class = "tables-small-data-style">' . esc_html($season_ReleaseYr) . '</td>';
 
-                        /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
-                         * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
-                         * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
                         $html .= '<td class="rating-cell tables-small-data-style" data-review-type="tv" data-target-type="season"
                                   data-couple-slug="' . esc_attr($couple_slug) . '" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '"
                                   data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_season_id) . '"
@@ -275,9 +342,6 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                   style="background-color:' . esc_attr($user1_season_rtg_color) . ';">' . esc_html($user1_season_rating) .
                               '</td>';
 
-                        /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
-                         * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
-                         * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
                         $html .= '<td class="rating-cell tables-small-data-style" data-review-type="tv" data-target-type="season"
                                   data-couple-slug="' . esc_attr($couple_slug) . '" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '"
                                   data-id="' . esc_attr($season_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_season_id) . '"
@@ -290,22 +354,16 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                       ? round(($user1_season_rating + $user2_season_rating) / 2, 2) : '';
                         $avg_season_color = color_rating_cell($avg_season_rating);
 
-                        /* Setup and display the average rating cell */
-                        $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_season_rating) . '" style="background-color: ' . esc_attr($avg_season_color) . ';">' 
+                        $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_season_rating) . '" style="background-color: ' . esc_attr($avg_season_color) . ';">'
                                   . esc_html($avg_season_rating) . '</td>';
 
-                        /* We are done with this row */
                         $html .= '</tr>';
 
                         // Episodes row for this season
                         $html .= '<tr class="season-episodes-row is-collapsed" data-season-id="' . esc_attr($season_id) . '">
                                     <td colspan="11" style="padding:4px 4px 8px 20px; ">';
 
-                        
-                        /*****************************************************************************************************
-                         * Now, we want to prepare the nested Episode rows for the current Season
-                         *****************************************************************************************************/
-                        if (!empty($episodes)) 
+                        if (!empty($episodes))
                         {
                             $html .= '<table class="episodes-table" style="width:100%; border-collapse:collapse; margin-top:4px;">
                                         <thead>
@@ -322,17 +380,15 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                         </thead>
                                         <tbody>';
 
-                            /* Now, we create the row for each Episode of this Season */
-                            foreach ($episodes as $episode) 
+                            foreach ($episodes as $episode)
                             {
                                 $episode_id  = $episode['id'] ?? 0;
                                 $episode_number = $episode['episode_number'] ?? '';
-                                $episode_AirDate    = $episode['air_date'] ?? ''; 
+                                $episode_AirDate    = $episode['air_date'] ?? '';
                                 $episode_title = $episode['episode_title'] ?? '';
                                 $episode_runtime = $episode['episode_runtime'] ?? '';
                                 $episode_summary = wp_kses_post($episode['summary'] ?? ''); // remove surrounding <p>
 
-                                // Reviews block
                                 $episode_reviews = $episode['reviews'] ?? [];
 
                                 $user1_episode_rating = review_value($episode_reviews, $reviewerA, 'rating');
@@ -352,9 +408,6 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                             <td class = "tables-small-data-style episode-runtime-column">' . esc_html($episode_runtime) . '</td>
                                             <td class = "tables-small-data-style">' . esc_html($episode_AirDate) . '</td>';
 
-                                /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
-                                 * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
-                                 * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
                                 $html .= '<td class="rating-cell tables-small-data-style" data-review-type="tv" data-target-type="episode"
                                           data-couple-slug="' . esc_attr($couple_slug) . '" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '"
                                           data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_episode_id) . '"
@@ -362,9 +415,6 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                           style="background-color:' . esc_attr($user1_episode_rtg_color) . ';">' . esc_html($user1_episode_rating) .
                                       '</td>';
 
-                                /* This cell for each season will hold the rating justification for the review in the cell. Only the rating is displayed      *
-                                 * with the background color. If the user who the cell's rating belongs to clicks the cell, they can edit both their rating *
-                                 * and review. If anyone else clicks on the cell, they can view the rating and review as read only in a popout window.      */
                                 $html .= '<td class="rating-cell tables-small-data-style" data-review-type="tv" data-target-type="episode"
                                           data-couple-slug="' . esc_attr($couple_slug) . '" data-show-id="' . esc_attr($TvShow_id) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '"
                                           data-id="' . esc_attr($episode_id) . '" data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_episode_id) . '"
@@ -372,13 +422,11 @@ if (!function_exists('add_TvShow_table_shortcode'))
                                           style="background-color:' . esc_attr($user2_episode_rtg_color) . ';">' . esc_html($user2_episode_rating) .
                                       '</td>';
 
-
-                                // Calculate average rating
                                 $avg_episode_rating = (is_numeric($user1_episode_rating) && is_numeric($user2_episode_rating))
                                             ? round(($user1_episode_rating + $user2_episode_rating) / 2, 2) : '';
                                 $avg_episode_color = color_rating_cell($avg_episode_rating);
 
-                                $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_episode_rating) . '" style="background-color: ' . esc_attr($avg_episode_color) . ';">' 
+                                $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_episode_rating) . '" style="background-color: ' . esc_attr($avg_episode_color) . ';">'
                                         . esc_html($avg_episode_rating) . '</td>';
 
                                 $html .= '</tr>';
@@ -411,74 +459,74 @@ if (!function_exists('add_TvShow_table_shortcode'))
             $html .= '
 <script>
 (function() {
-  function asNumber(v) 
+  function asNumber(v)
   {
     if (v === null || v === undefined) return NaN;
     const n = parseFloat(String(v).replace(",", "."));
     return Number.isFinite(n) ? n : NaN;
   }
 
-  function text(el) 
+  function text(el)
   {
     return (el && el.textContent || "").trim();
   }
 
-  function getReviewerCell(row, reviewer) 
+  function getReviewerCell(row, reviewer)
   {
     return row.querySelector(\'.rating-cell[data-reviewer="\' + reviewer + \'"]\');
   }
 
-  function getAvgCell(row) 
+  function getAvgCell(row)
   {
     return row.querySelector(".avg-cell");
   }
 
-  function getKey(row, mode, u1, u2) 
+  function getKey(row, mode, u1, u2)
   {
-    switch (mode) 
+    switch (mode)
     {
       case "u1_desc":
-      case "u1_asc": 
+      case "u1_asc":
         {
             const c = getReviewerCell(row, u1);
             return asNumber(c ? c.dataset.rating : NaN);
         }
 
       case "u2_desc" :
-      case "u2_asc"  : 
+      case "u2_asc"  :
         {
             const c = getReviewerCell(row, u2);
             return asNumber(c ? c.dataset.rating : NaN);
         }
 
       case "avg_desc":
-      case "avg_asc": 
+      case "avg_asc":
         {
             const c = getAvgCell(row);
             return asNumber(c ? c.dataset.rating : NaN);
         }
       case "title_az":
         return text(row.querySelector(".title-cell")).toLowerCase();
-      
+
       case "director_az":
         return text(row.querySelector(".director-cell")).toLowerCase();
-      
+
       default:
         return "";
     }
   }
 
-  function compareValues(a, b, numeric, asc) 
+  function compareValues(a, b, numeric, asc)
   {
-    if (numeric) 
+    if (numeric)
     {
       const aNaN = Number.isNaN(a), bNaN = Number.isNaN(b);
       if (aNaN && bNaN) return 0;
       if (aNaN) return 1;
       if (bNaN) return -1;
       return asc ? a - b : b - a;
-    } 
-    else 
+    }
+    else
     {
       if (a === b) return 0;
       if (asc) return a < b ? -1 : 1;
@@ -486,7 +534,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
     }
   }
 
-  function sortTable(mode) 
+  function sortTable(mode)
   {
     const table = document.getElementById("TvShow-table");
     if (!table) return;
@@ -502,7 +550,7 @@ if (!function_exists('add_TvShow_table_shortcode'))
     const asc = mode.endsWith("_asc");
     const isNumeric = numericModes.has(mode);
 
-    indexed.sort((A, B) => 
+    indexed.sort((A, B) =>
     {
       const cmp = compareValues(A.key, B.key, isNumeric, asc);
       return cmp !== 0 ? cmp : (A.idx - B.idx);
@@ -511,12 +559,12 @@ if (!function_exists('add_TvShow_table_shortcode'))
     indexed.forEach(item => tbody.appendChild(item.row));
   }
 
-  document.addEventListener("DOMContentLoaded", function() 
+  document.addEventListener("DOMContentLoaded", function()
   {
     const sel = document.getElementById("TvShow-sort");
     if (!sel) return;
 
-    sel.addEventListener("change", function() 
+    sel.addEventListener("change", function()
     {
       sortTable(this.value);
     });
@@ -641,11 +689,11 @@ add_TvShow_table_shortcode('mn_tv_show_table', 'mn_tv_reviews', 'Marissa', 'Nath
 // Sierra / Benett
 add_TvShow_table_shortcode('sb_tv_show_table', 'sb_tv_reviews', 'Sierra', 'Benett', 'SierraBenett');
 
-// Dad (Rob) / Mom (Terry)
-add_TvShow_table_shortcode('mom_dad_tv_show_table', 'mom_dad_tv_reviews', 'Rob', 'Terry', 'Dad', 'Mom', 'MomDad');
+// Dad (Rob) / Mom (Terry) -> slug is MomDad, labels are Dad/Mom
+add_TvShow_table_shortcode('mom_dad_tv_show_table', 'mom_dad_tv_reviews', 'Rob', 'Terry', 'MomDad', 'Dad', 'Mom');
 
-// Mia and Logan
-add_TvShow_table_shortcode('mia_logan_tv_show_table', 'mia_logan_tv_reviews', 'Mia', 'Logan', 'Mia', 'Logan', 'MiaLogan');
+// Mia and Logan -> slug is MiaLogan, labels are Mia/Logan
+add_TvShow_table_shortcode('mia_logan_tv_show_table', 'mia_logan_tv_reviews', 'Mia', 'Logan', 'MiaLogan', 'Mia', 'Logan');
 
-// Annie
-add_TvShow_table_shortcode('af_tv_show_table', 'af_tv_reviews', 'Annie', 'Felix', 'Annie', 'Felix', 'AnnieFelix');
+// Annie and Felix -> slug is AnnieFelix, labels are Annie/Felix
+add_TvShow_table_shortcode('af_tv_show_table', 'af_tv_reviews', 'Annie', 'Felix', 'AnnieFelix', 'Annie', 'Felix');
