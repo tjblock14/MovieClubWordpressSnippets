@@ -2,6 +2,9 @@
 /*******************************************************
  * Club Average table (homepage)
  * Columns: Title | Director | Actors | Genres | Club Average | # Reviews
+ * - Adds fixed-height scroll wrapper (so horizontal scrollbar is always reachable)
+ * - Sticky header with solid background + persistent bottom divider line
+ * - Prevents table from overlaying site dropdown menus (isolated stacking context)
  *******************************************************/
 if (!function_exists('club_safe_implode')) {
     function club_safe_implode($field) {
@@ -25,8 +28,64 @@ add_shortcode('club_average_table', function() {
     }
     $movies = $data['results'];
 
-    // Sort bar (client-side)
+    /********************************************************************
+     * INLINE CSS: scroll wrapper + sticky header (SOLID + divider line)
+     ********************************************************************/
     $html = '
+<style>
+  /* The scroll viewport: shows ~5-ish rows then scrolls */
+  .mc-table-scroll-wrapper {
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+    display: block;
+
+    max-height: 700px;     /* tweak this for how many rows you want visible */
+    overflow-y: auto;
+    overflow-x: auto;
+
+    border: 2px solid black;
+    border-radius: 4px;
+
+    -webkit-overflow-scrolling: touch;
+
+    position: relative;
+    isolation: isolate;    /* keeps site dropdowns above sticky header */
+    z-index: 0;
+  }
+
+  .mc-table-scroll-wrapper table {
+    min-width: 1100px;     /* your existing min width */
+    width: max-content;
+    border-collapse: collapse;
+    font-size: 14px;
+    border: none;          /* border is on wrapper */
+  }
+
+  /* Make header rows opaque */
+  .mc-table-scroll-wrapper thead,
+  .mc-table-scroll-wrapper thead tr {
+    background-color: #3a0f14; /* match your maroon header */
+  }
+
+  /* Sticky header cells */
+  .mc-table-scroll-wrapper thead th.table-title-cells-style {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+
+    background-color: #3a0f14; /* solid */
+    background-clip: padding-box;
+
+    /* sticky-safe bottom divider line that ALWAYS stays visible */
+    border-bottom: none !important;
+    box-shadow: inset 0 -1px 0 var(--default_table_text_color);
+  }
+</style>
+';
+
+    // Sort bar (client-side)
+    $html .= '
   <div class="movie-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
     <label for="club-sort" style="font-weight:600;">Sort by:</label>
     <select id="club-sort" class="club-sort">
@@ -39,8 +98,8 @@ add_shortcode('club_average_table', function() {
     </select>
   </div>';
 
-    // Table
-    $html .= '<div style="overflow-x:auto;">
+    // Table (wrapped)
+    $html .= '<div class="mc-table-scroll-wrapper">
   <table id="club-avg-table" style="border-collapse:collapse; min-width:1100px; font-size:14px; border:2px solid black;">
     <thead>
       <tr>
@@ -56,12 +115,14 @@ add_shortcode('club_average_table', function() {
     <tbody>';
 
     foreach ($movies as $movie) {
-        $title    = $r['title'] ?? '';
+        // FIX: was $r['title'] (undefined) -> should be $movie['title']
+        $title    = $movie['title'] ?? '';
+
         // Your backend might send 'director' or 'directors' (JSONField). Normalize:
         $director = club_safe_implode($movie['director'] ?? ($movie['directors'] ?? ''));
         $actors   = club_safe_implode($movie['actors'] ?? '');
         $genres   = club_safe_implode($movie['genres'] ?? '');
-        $summary = $movie['summary'] ?? '';
+        $summary  = $movie['summary'] ?? '';
 
         $avg      = isset($movie['avg_rating']) ? (float)$movie['avg_rating'] : null;
         $count    = (int)($movie['num_reviews'] ?? 0);
@@ -76,12 +137,13 @@ add_shortcode('club_average_table', function() {
           data-sort-count="'   . esc_attr($count) . '">';
 
         $html .= '<td class="table-title-cells-style">
-                            <div class="movie-poster-tooltip" data-title="' . esc_attr($movie['title']) . '">
-                                <img src="' . esc_url($movie['poster_url']) . '" 
-                                    alt="' . esc_attr($movie['title']) . '" 
-                                    style="max-width:120px;height:auto;border-radius:4px;" />
-                            </div>
-                          </td>';
+                    <div class="movie-poster-tooltip" data-title="' . esc_attr($movie['title']) . '">
+                        <img src="' . esc_url($movie['poster_url']) . '"
+                            alt="' . esc_attr($movie['title']) . '"
+                            style="max-width:120px;height:auto;border-radius:4px;" />
+                    </div>
+                  </td>';
+
         $html .= '<td class = "tables-small-data-style">' . esc_html($summary) . '</td>';
         $html .= '<td class = "tables-small-data-style">' . esc_html($director) . '</td>';
         $html .= '<td class = "tables-small-data-style">' . esc_html($actors) . '</td>';
@@ -113,8 +175,15 @@ add_shortcode('club_average_table', function() {
     }
   }
   function compare(a,b,isNum,asc){
-    if(isNum){ const aN=Number.isNaN(a), bN=Number.isNaN(b); if(aN&&bN) return 0; if(aN) return 1; if(bN) return -1; return asc? a-b : b-a; }
-    if(a===b) return 0; return asc ? (a<b?-1:1) : (a>b?-1:1);
+    if(isNum){
+      const aN=Number.isNaN(a), bN=Number.isNaN(b);
+      if(aN&&bN) return 0;
+      if(aN) return 1;
+      if(bN) return -1;
+      return asc? a-b : b-a;
+    }
+    if(a===b) return 0;
+    return asc ? (a<b?-1:1) : (a>b?-1:1);
   }
   function sortTable(mode){
     const t=document.getElementById("club-avg-table"); if(!t) return;
@@ -129,16 +198,16 @@ add_shortcode('club_average_table', function() {
   document.addEventListener("DOMContentLoaded", function(){
     const sel=document.getElementById("club-sort"); if(!sel) return;
     sel.addEventListener("change", function(){ sortTable(this.value); });
-	
-     // Sort by average high to low by default
-      sel.value = "avg_desc";  // set dropdown to show this choice
-      sortTable("avg_desc");   // perform the sort
+
+    // Sort by average high to low by default
+    sel.value = "avg_desc";
+    sortTable("avg_desc");
   });
 })();
 </script>';
 
-/* This section displays the TMDM logo at the bottom of the tables with a short message. This is the attribution */
-$html .= '
+    /* This section displays the TMDB logo at the bottom of the tables with a short message. This is the attribution */
+    $html .= '
 <div class="tmdb-attribution" style="
     display:flex;
     flex-direction:column;
@@ -149,7 +218,7 @@ $html .= '
     color:#aaa;
     text-align:center;
 ">
-    <img 
+    <img
         src="https://www.themoviedb.org/assets/2/v4/logos/v2/blue_long_1-8ba2ac31f354005783fab473602c34c3f4fd207150182061e425d366e4f34596.svg"
         alt="The Movie Database (TMDB)"
         style="height:10px;"
