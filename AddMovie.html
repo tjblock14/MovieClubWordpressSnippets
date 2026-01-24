@@ -1,138 +1,173 @@
 <div id="tmdb-search" style="max-width:800px;margin:1rem auto;">
-  <label style="display:block;margin-bottom:.5rem;">Search Movies</label>
-  <input id="mq" type="text" placeholder="e.g., The Dark Knight" style="width:100%;padding:.6rem;border:1px solid #ccc;border-radius:.4rem;">
-  <div id="m-results" style="margin-top:1rem;"></div>
+  <label class = "add-tv-show-results" style="display:block;margin-bottom:.5rem;">Search movies</label>
+  <input id="movieq" type="text" placeholder="e.g., Inception" style="width:100%;padding:.6rem;border:1px solid #ccc;border-radius:.4rem;">
+  <div id="movie-results" style="margin-top:1rem;"></div>
 
-  <!-- Optional TMDB credit/disclaimer area -->
-  <div style="font-size:12px; margin-top:8px; opacity:0.7;">
+  <!-- TMDB attribution (required) -->
+  <div style="margin-top:.8rem;font-size:.85rem;color:#666;">
     This product uses the TMDB API but is not endorsed or certified by TMDB.
   </div>
 </div>
 
 <script>
-(function () {
-  const input = document.getElementById('mq');
-  const resultsEl = document.getElementById('m-results');
-  let t;
+(function () 
+{
+    const input = document.getElementById('movieq');
+    const resultsEl = document.getElementById('movie-results');
+    let t;
 
-  const API_BASE = 'https://movieclubdatabase.onrender.com';
+    const API_BASE = 'https://movieclubdatabase.onrender.com';
 
-  // ✅ Put your TMDB key here
-  const TMDB_API_KEY = 'PASTE_YOUR_TMDB_KEY_HERE';
+    // ✅ Paste your TMDB "API Read Access Token" here (v4). Keep the quotes.
+    const TMDB_READ_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzMjM5ZjE4NTIwMGMyMzdiMGI3OTNlZTIxMDMxZDcwNCIsIm5iZiI6MTc2NzM5NTU5NS40NzMsInN1YiI6IjY5NTg1MTBiNzI1OGJmOTcyNGNiZDdmOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.26QF82MUCoZKV1nQrzQwA5i-9TkKUAVcXs5_pCrBI2Q';
+    // TMDB posters
+    const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w185';
 
-  // TMDB images
-  const TMDB_IMG = 'https://image.tmdb.org/t/p/w185';
-
-  function getAccessToken() {
-    return localStorage.getItem('access_token');
-  }
-
-  function stripTags(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html || '';
-    return div.textContent || div.innerText || '';
-  }
-
-  async function importMovie(tmdbId, button) {
-    const token = getAccessToken();
-    if (!token) {
-      alert('Please log in (Movie Club API) before importing movies.');
-      button.disabled = false;
-      button.textContent = 'Select';
-      return;
+    // 🔑 Use the SAME key you already use for reviews
+    function getAccessToken() 
+    {
+        return localStorage.getItem('access_token');
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/api/movies/import_from_tmdb/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ tmdb_id: Number(tmdbId) })
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Import failed (${res.status}): ${text}`);
-      }
-
-      const movie = await res.json();
-      button.textContent = 'Added ✓';
-      button.style.cursor = 'default';
-    } catch (err) {
-      console.error(err);
-      alert('Import error: ' + err.message);
-      button.disabled = false;
-      button.textContent = 'Select';
-    }
-  }
-
-  function render(items) {
-    if (!items || !items.length) {
-      resultsEl.innerHTML = '<p>No results.</p>';
-      return;
+    function escapeHtml(s) 
+    {
+        return String(s ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
     }
 
-    resultsEl.innerHTML = items.map((m) => {
-      const title = m.title || m.original_title || 'Untitled';
-      const year = (m.release_date || '').slice(0, 4);
-      const img = m.poster_path ? (TMDB_IMG + m.poster_path) : '';
-      const summary = (m.overview || '').slice(0, 180);
+    async function importMovie(tmdbId, button) 
+    {
+        const token = getAccessToken();
+        if (!token) {
+        alert('Please log in (Movie Club API) before importing movies.');
+        button.disabled = false;
+        button.textContent = 'Select';
+        return;
+    }
 
-      return `
-        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;align-items:flex-start;">
-          <img src="${img}" alt="" style="width:70px;height:96px;object-fit:cover;border-radius:6px;background:#f2f2f2;">
-          <div style="flex:1;">
-            <div style="font-weight:600">${title} ${year ? `(${year})` : ''}</div>
-            <div style="font-size:.9rem;margin:.3rem 0;">${summary}${summary.length === 180 ? '…' : ''}</div>
-            <button data-id="${m.id}" class="m-select" style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:.4rem;background:#fff;cursor:pointer;">
-              Select
+    try 
+    {
+        const res = await fetch(`${API_BASE}/api/movies/import_from_tmdb/`, 
+        {
+            method: 'POST',
+            headers: 
+            {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ tmdb_id: Number(tmdbId) })
+        });
+
+        if (!res.ok) 
+        {
+            const text = await res.text();
+            throw new Error(`Import failed (${res.status}): ${text}`);
+        }
+
+        await res.json();
+        button.textContent = 'Added ✓';
+        button.style.cursor = 'default';
+    } 
+    catch (err) 
+    {
+        console.error(err);
+        alert('Import error: ' + err.message);
+        button.disabled = false;
+        button.textContent = 'Select';
+    }
+    }
+
+    function render(items) 
+    {
+        if (!items || !items.length) 
+        {
+        resultsEl.innerHTML = '<p>No results.</p>';
+        return;
+        }
+
+        resultsEl.innerHTML = items.map((m) => 
+        {
+            const poster = m.poster_path ? `${TMDB_POSTER_BASE}${m.poster_path}` : '';
+            const title = m.title || 'Untitled';
+            const year = (m.release_date || '').slice(0, 4);
+            const overview = (m.overview || '').replace(/\s+/g,' ').trim().slice(0, 180);
+            const rating = (typeof m.vote_average === 'number') ? m.vote_average.toFixed(1) : '';
+
+            return `
+            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;align-items:flex-start;">
+            <img src="${escapeHtml(poster)}" alt="" style="width:70px;height:96px;object-fit:cover;border-radius:6px;background:#f2f2f2;">
+            <div style="flex:1;">
+            <div class = "add-tv-show-results" style="font-weight:600">
+                ${escapeHtml(title)} ${year ? `(${escapeHtml(year)})` : ''} ${rating ? `<span style="font-weight:400;color:#666">• ${escapeHtml(rating)}/10</span>` : ''}
+            </div>
+            <div class = "add-tv-show-results" style="font-size:.9rem;margin:.3rem 0;">${escapeHtml(overview)}${overview.length === 180 ? '…' : ''}</div>
+            <button data-id="${escapeHtml(m.id)}" class="movie-select"
+                style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:.4rem;background:#fff;cursor:pointer;">
+                Select
             </button>
-          </div>
-        </div>`;
-    }).join('');
+            </div>
+            </div>`;
+        }).join('');
 
-    resultsEl.querySelectorAll('.m-select').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        btn.disabled = true;
-        btn.textContent = 'Adding…';
-        importMovie(id, btn);
-      });
-    });
-  }
+        resultsEl.querySelectorAll('.movie-select').forEach(btn => 
+        {
+                btn.addEventListener('click', () => 
+                {
+                const id = btn.getAttribute('data-id');
+                btn.disabled = true;
+                btn.textContent = 'Adding…';
+                importMovie(id, btn);
+            });
+        });
+    }
 
-  async function searchTMDB(q) {
-    if (!q) {
-      resultsEl.innerHTML = '';
-      return;
-    }
-    if (!TMDB_API_KEY || TMDB_API_KEY.includes('PASTE_')) {
-      resultsEl.innerHTML = '<p style="color:#b00;">Missing TMDB API key.</p>';
-      return;
-    }
+    async function searchTMDB(q) 
+    {
+        if (!q) 
+        {
+            resultsEl.innerHTML = '';
+            return;
+        }
 
     resultsEl.innerHTML = '<p>Searching…</p>';
 
-    try {
-      // Search endpoint
-      const url = `https://api.themoviedb.org/3/search/movie?api_key=${encodeURIComponent(TMDB_API_KEY)}&query=${encodeURIComponent(q)}&include_adult=false`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('TMDB search failed');
-      const data = await res.json();
+    try 
+    {
+        // TMDB search endpoint for movies
+        const url = `https://api.themoviedb.org/3/search/movie?language=en-US&include_adult=false&page=1&query=${encodeURIComponent(q)}`;
 
-      // data.results is the movie list
-      render(data.results || []);
-    } catch (err) {
-      console.error(err);
-      resultsEl.innerHTML = '<p style="color:#b00;">Error searching TMDB.</p>';
+        const res = await fetch(url, 
+        {
+            headers: 
+            {
+            'Authorization': `Bearer ${TMDB_READ_TOKEN}`,
+            'Accept': 'application/json'
+            }
+        });
+
+        const text = await res.text();
+        if (!res.ok) {
+        throw new Error(`TMDB search failed (${res.status}): ${text.slice(0, 200)}`);
+        }
+
+        const data = JSON.parse(text);
+        render(data.results || []);
+    } 
+    catch (err) 
+    {
+        console.error(err);
+        resultsEl.innerHTML = `<p style="color:#b00;">Error searching TMDB. (${escapeHtml(err.message)})</p>`;
     }
-  }
+    }
 
-  input.addEventListener('input', () => {
-    clearTimeout(t);
-    t = setTimeout(() => searchTMDB(input.value.trim()), 350);
-  });
+    input.addEventListener('input', () => 
+    {
+        clearTimeout(t);
+        t = setTimeout(() => searchTMDB(input.value.trim()), 350);
+    });
 })();
 </script>
