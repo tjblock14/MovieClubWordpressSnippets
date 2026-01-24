@@ -1,118 +1,144 @@
 <div id="tvmaze-search" style="max-width:800px;margin:1rem auto;">
-  <label style="display:block;margin-bottom:.5rem;">Search TV shows</label>
+  <label class = "add-tv-show-results" style="display:block;margin-bottom:.5rem;">Search TV shows</label>
   <input id="tvq" type="text" placeholder="e.g., Breaking Bad" style="width:100%;padding:.6rem;border:1px solid #ccc;border-radius:.4rem;">
   <div id="tv-results" style="margin-top:1rem;"></div>
 </div>
 
 <script>
-(function () {
-  const input = document.getElementById('tvq');
-  const resultsEl = document.getElementById('tv-results');
-  let t;
+(function () 
+{
+    const input = document.getElementById('tvq');
+    const resultsEl = document.getElementById('tv-results');
+    let t;
 
-  const API_BASE = 'https://movieclubdatabase.onrender.com';
+    const API_BASE = 'https://movieclubdatabase.onrender.com';
 
-  // 🔑 Use the SAME key you already use for reviews
-  function getAccessToken() {
-    return localStorage.getItem('access_token'); // <-- update if your key is different
-  }
-
-  function stripTags(html) {
-    const div = document.createElement('div');
-    div.innerHTML = html || '';
-    return div.textContent || div.innerText || '';
-  }
-
-  async function importShow(tvmazeId, button) {
-    const token = getAccessToken();
-    if (!token) {
-      alert('Please log in (Movie Club API) before importing shows.');
-      button.disabled = false;
-      button.textContent = 'Select';
-      return;
+    // 🔑 Use the SAME key you already use for reviews
+    function getAccessToken() 
+    {
+        return localStorage.getItem('access_token'); // <-- update if your key is different
     }
 
-    try {
-      const res = await fetch(`${API_BASE}/api/shows/import_from_tvmaze/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ tvmaze_id: Number(tvmazeId) })
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`Import failed (${res.status}): ${text}`);
-      }
-
-      const show = await res.json();
-      button.textContent = 'Added ✓';
-      button.style.cursor = 'default';
-    } catch (err) {
-      console.error(err);
-      alert('Import error: ' + err.message);
-      button.disabled = false;
-      button.textContent = 'Select';
-    }
-  }
-
-  function render(items) {
-    if (!items || !items.length) {
-      resultsEl.innerHTML = '<p>No results.</p>';
-      return;
+    function stripTags(html) 
+    {
+        const div = document.createElement('div');
+        div.innerHTML = html || '';
+        return div.textContent || div.innerText || '';
     }
 
-    resultsEl.innerHTML = items.map(({ show }) => {
-      const img = (show.image && (show.image.medium || show.image.original)) || '';
-      const genres = (show.genres || []).join(', ');
-      const year = (show.premiered || '').slice(0, 4);
-      const summary = stripTags(show.summary || '').slice(0, 180);
-      return `
-        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;align-items:flex-start;">
-          <img src="${img}" alt="" style="width:70px;height:96px;object-fit:cover;border-radius:6px;background:#f2f2f2;">
-          <div style="flex:1;">
-            <div style="font-weight:600">${show.name || 'Untitled'} ${year ? `(${year})` : ''}</div>
-            <div style="font-size:.9rem;color:#666">${genres}</div>
-            <div style="font-size:.9rem;margin:.3rem 0;">${summary}${summary.length === 180 ? '…' : ''}</div>
+    async function importShow(tvmazeId, button) 
+    {
+        const token = getAccessToken();
+        if (!token) 
+        {
+            alert('Please log in (Movie Club API) before importing shows.');
+            button.disabled = false;
+            button.textContent = 'Select';
+            return;
+        }
+
+        try 
+        {
+            const res = await fetch(`${API_BASE}/api/shows/import_from_tvmaze/`, 
+            {
+                method: 'POST',
+                headers: 
+                {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+
+                body: JSON.stringify({ tvmaze_id: Number(tvmazeId) })
+            });
+
+            if (!res.ok) 
+            {
+                const text = await res.text();
+                throw new Error(`Import failed (${res.status}): ${text}`);
+            }
+
+            const show = await res.json();
+            button.textContent = 'Added ✓';
+            button.style.cursor = 'default';
+        } 
+        catch (err) 
+        {
+            console.error(err);
+            alert('Import error: ' + err.message);
+            button.disabled = false;
+            button.textContent = 'Select';
+        }
+    }
+
+    function render(items) 
+    {
+        if (!items || !items.length) 
+        {
+            resultsEl.innerHTML = '<p>No results.</p>';
+            return;
+        }
+
+        resultsEl.innerHTML = items.map(({ show }) => 
+        {
+            const img = (show.image && (show.image.medium || show.image.original)) || '';
+            const genres = (show.genres || []).join(', ');
+            const year = (show.premiered || '').slice(0, 4);
+            const summary = stripTags(show.summary || '').slice(0, 180);
+            return `
+            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;align-items:flex-start;">
+            <img src="${img}" alt="" style="width:70px;height:96px;object-fit:cover;border-radius:6px;background:#f2f2f2;">
+            <div style="flex:1;">
+            <div class = "add-tv-show-results" style="font-weight:600">${show.name || 'Untitled'} ${year ? `(${year})` : ''}</div>
+            <div class = "add-tv-show-results" style="font-size:.9rem;">${genres}</div>
+            <div class = "add-tv-show-results" style="font-size:.9rem;margin:.3rem 0;">${summary}${summary.length === 180 ? '…' : ''}</div>
             <button data-id="${show.id}" class="tv-select" style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:.4rem;background:#fff;cursor:pointer;">
-              Select
+            Select
             </button>
-          </div>
-        </div>`;
-    }).join('');
+            </div>
+            </div>`;
+        }).join('');
 
-    resultsEl.querySelectorAll('.tv-select').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        btn.disabled = true;
-        btn.textContent = 'Adding…';
-        importShow(id, btn);
-      });
+        resultsEl.querySelectorAll('.tv-select').forEach(btn => 
+        {
+            btn.addEventListener('click', () => 
+            {
+                const id = btn.getAttribute('data-id');
+                btn.disabled = true;
+                btn.textContent = 'Adding…';
+                importShow(id, btn);
+            });
+        });
+    }
+
+    async function searchTvMaze(q) 
+    {
+        if (!q) 
+        {
+            resultsEl.innerHTML = '';
+            return;
+        }
+
+        resultsEl.innerHTML = '<p>Searching…</p>';
+
+        try 
+        {
+            const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(q)}`);
+            if (!res.ok) throw new Error('TVMaze search failed');
+            const data = await res.json();
+            render(data);
+        } 
+        catch (err) 
+        {
+            console.error(err);
+            resultsEl.innerHTML = '<p style="color : var(--default_table_text_color);">Error searching TVMaze.</p>';
+        }
+    }
+
+    input.addEventListener('input', () => 
+    {
+        clearTimeout(t);
+        t = setTimeout(() => searchTvMaze(input.value.trim()), 350);
     });
-  }
 
-  async function searchTvMaze(q) {
-    if (!q) {
-      resultsEl.innerHTML = '';
-      return;
-    }
-    resultsEl.innerHTML = '<p>Searching…</p>';
-    try {
-      const res = await fetch(`https://api.tvmaze.com/search/shows?q=${encodeURIComponent(q)}`);
-      if (!res.ok) throw new Error('TVMaze search failed');
-      const data = await res.json();
-      render(data);
-    } catch (err) {
-      console.error(err);
-      resultsEl.innerHTML = '<p style="color:#b00;">Error searching TVMaze.</p>';
-    }
-  }
-
-  input.addEventListener('input', () => {
-    clearTimeout(t);
-    t = setTimeout(() => searchTvMaze(input.value.trim()), 350);
-  });
 })();
 </script>

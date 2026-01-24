@@ -1,30 +1,42 @@
-.rating-cell {
-  width: 90
+.rating-cell 
+{
+    width: 90
 }
 
-.table-title-cells-style {
-  text-align    :center;
-  vertical-align: middle;
-  font-size     : 20px;
-  font-weight   : 600;
-  padding       : 4px;
-  color         : var(--default_table_text_color);
+.table-title-cells-style 
+{
+    text-align    :center;
+    vertical-align: middle;
+    font-size     : 20px;
+    font-weight   : 600;
+    padding       : 4px;
+    color         : var(--default_table_text_color);
 }
 
-.season-episode-number-style {
-  text-align    :center;
-  vertical-align: middle;
-  font-size  : 18px;
-  font-weight: 400;
-  padding    : 4px;
-  color      : var(--default_table_text_color);
+.season-episode-number-style 
+{
+    text-align    :center;
+    vertical-align: middle;
+    font-size  : 18px;
+    font-weight: 400;
+    padding    : 4px;
+    color      : var(--default_table_text_color);
 }
 
-.tables-small-data-style {
-  text-align    :center;
-  vertical-align: middle;
-  font-size  : 14px;
-  font-weight: 100;
-  padding    : 4px;
-  color      : var(--default_table_text_color);
+.tables-small-data-style 
+{
+    text-align    :center;
+    vertical-align: middle;
+    font-size  : 14px;
+    font-weight: 100;
+    padding    : 4px;
+    color      : var(--default_table_text_color);
+}
+
+/********************************************************
+* Add a TV Show / Add a Movie classes
+*******************************************************/
+.add-tv-show-results 
+{
+    color : var(--default_table_text_color)
 }
