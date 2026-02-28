@@ -232,7 +232,11 @@ if (!function_exists('add_movie_table_shortcode'))
                 $user2_color  = color_rating_cell($user2_rating);
                 $user2_data_reviewer = strtolower($reviewerB);
 
-                $html .= '<td class="rating-cell tables-small-data-style" data-review-type="movie" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '" data-rating="' . esc_attr($user2_rating) . '" data-review="' . esc_attr($user2_review) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
+                $html .= '<td class="rating-cell tables-small-data-style" data-review-type="movie" data-reviewer="' . esc_attr($user2_data_reviewer) 
+                          . '" data-id="' . esc_attr($movie_id) . '" data-movie-title="' . esc_attr($title) 
+                          . '" data-review-id="' . esc_attr($user2_id) . '" data-rating="' . esc_attr($user2_rating) 
+                          . '" data-review="' . esc_attr($user2_review) . '" style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) 
+                          . '</td>';
 
                 $avg_rating = (is_numeric($user1_rating) && is_numeric($user2_rating))
                     ? round(($user1_rating + $user2_rating) / 2, 2)

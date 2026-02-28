@@ -1,0 +1,27 @@
+/* Sort bar text */
+.TvShow-sortbar {
+  color: #421015;
+}
+
+/* Label specifically */
+.TvShow-sortbar label {
+  color: var(--default_table_text_color);
+}
+
+/* Dropdown text */
+.TvShow-sortbar select {
+  color: var(--default_table_text_color);
+}
+
+.TvShow-sortbar select {
+  background-color: #3a0f14;
+  color: var(--default_table_text_color);
+  border: 1px solid var(--default_table_text_color);
+}
+
+.TvShow-sortbar select {
+  background-color: #3a0f14;
+  color: var(--default_table_text_color);
+  border-radius: 4px;
+  padding: 4px 8px;
+}

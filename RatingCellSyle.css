@@ -38,5 +38,13 @@
 *******************************************************/
 .add-tv-show-results 
 {
-    color : var(--default_table_text_color)
+    color : var(--default_table_text_color);
+}
+
+/********************************************************
+* Seasons Page: Show Info Class
+*******************************************************/
+.TvShowMetaItem
+{
+    color : var(--default_table_text_color);
 }

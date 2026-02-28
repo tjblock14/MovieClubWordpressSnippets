@@ -1,0 +1,33 @@
+/* Hidden by default */
+.movie-details-row 
+{
+    display: none;
+}
+
+/* Visible when opened */
+.movie-details-row.is-open 
+{
+    display: table-row;
+}
+
+.poster-img 
+{
+    max-width: 80px;
+    border-radius: 6px;
+}
+
+/* Mobile-only layout changes */
+@media (max-width: 768px) 
+{
+    .col-director,
+    .col-actors,
+    .col-genres 
+    {
+        display: none !important;
+    }
+
+    .poster-tap 
+    {   
+        cursor: pointer;
+    }
+}
