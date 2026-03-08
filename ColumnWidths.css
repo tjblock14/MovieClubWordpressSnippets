@@ -4,34 +4,42 @@
  * the width of the column so each column can be of separate width.
  **********************************************************************/
 
- .season-episode-identifier-column {
-  width: 50px;
+.season-episode-identifier-column 
+{
+    width: 50px;
 }
 
-.summary-column-width {
-  width: 500px;
+.summary-column-width
+{
+    width: 500px;
 }
 
-.actors-column-width {
-  width : 150px;
+.actors-column-width
+{
+    width : 150px;
 }
 
-.episode-title-column {
-  width: 90px;
+.episode-title-column
+{
+    width: 90px;
 }
 
-.show-image-column {
-  width: 100px;
+.show-image-column
+{
+    width: 100px;
 }
 
-.short-info-column-width {
-  width: 50px;
+.short-info-column-width
+{
+    width: 50px;
 }
 
-.season-episode-review-column {
-  width: 100px
+.season-episode-review-column
+{
+    width: 100px
 }
 
-.episode-runtime-column {
-  width : 50px
+.episode-runtime-column
+{
+    width : 50px
 }
