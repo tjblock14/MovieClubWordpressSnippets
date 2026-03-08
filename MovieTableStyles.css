@@ -1,27 +1,96 @@
 /* Sort bar text */
-.TvShow-sortbar {
-  color: #421015;
+.TvShow-sortbar
+{
+    color: #421015;
 }
 
 /* Label specifically */
-.TvShow-sortbar label {
-  color: var(--default_table_text_color);
+.TvShow-sortbar label
+{
+    color: var(--default_table_text_color);
 }
 
 /* Dropdown text */
-.TvShow-sortbar select {
-  color: var(--default_table_text_color);
+.TvShow-sortbar select
+{
+    color: var(--default_table_text_color);
 }
 
-.TvShow-sortbar select {
-  background-color: #3a0f14;
-  color: var(--default_table_text_color);
-  border: 1px solid var(--default_table_text_color);
+.TvShow-sortbar select
+{
+    background-color: #3a0f14;
+    color: var(--default_table_text_color);
+    border: 1px solid var(--default_table_text_color);
 }
 
-.TvShow-sortbar select {
-  background-color: #3a0f14;
-  color: var(--default_table_text_color);
-  border-radius: 4px;
-  padding: 4px 8px;
+.TvShow-sortbar select
+{
+    background-color: #3a0f14;
+    color: var(--default_table_text_color);
+    border-radius: 4px;
+    padding: 4px 8px;
+}
+
+/********************************************************************************
+ * Styles for the Sort Bar on Couple Specific Review Pages on Movies
+ ********************************************************************************/
+/* The scroll viewport: shows ~5 rows then scrolls */
+.mc-table-scroll-wrapper
+{
+    /* ✅ Center the whole scroll viewport */
+    width: fit-content;     /* shrink to table width */
+    max-width: 100%;        /* but never exceed screen width */
+    margin: 0 auto;         /* center it */
+    display: block;
+
+    /* ✅ Scrolling behavior */
+    max-height: 700px;      /* increase so more rows show (tweak this) */
+    overflow-y: auto;
+    overflow-x: auto;
+
+    border: 2px solid black;
+    border-radius: 4px;
+    -webkit-overflow-scrolling: touch;
+
+    z-index: 0;                 /* creates a local stacking context */
+    position: relative;
+}
+
+/* ✅ Keep your table behavior */
+.mc-table-scroll-wrapper table
+{
+    /*min-width: 1400px;       keep your current minimum width */
+    width: max-content;     /* allow table to be wider than screen */
+    border-collapse: collapse;
+    font-size: 14px;
+    border: none;
+}
+
+
+/* Sticky header inside the scroll wrapper */
+/* Fully opaque sticky header (no bleed-through) */
+.mc-table-scroll-wrapper thead 
+{
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background-color: #3a0f14; /* keep your maroon header */
+}
+
+.mc-table-scroll-wrapper thead tr
+{
+    background-color: #3a0f14;
+}
+
+/* Sticky header cells */
+.mc-table-scroll-wrapper thead th.table-title-cells-style 
+{
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #3a0f14;
+
+    /* ✅ draw the line as an overlay */
+    border-bottom: none !important;
+    box-shadow: inset 0 -1px 0 var(--default_table_text_color);
 }

@@ -1,36 +1,29 @@
 .rating-cell 
 {
-    width: 90
+    width : 150px;
 }
 
+/* This is the style used in most table headers. */
 .table-title-cells-style 
 {
-    text-align    :center;
-    vertical-align: middle;
-    font-size     : 20px;
-    font-weight   : 600;
-    padding       : 4px;
-    color         : var(--default_table_text_color);
+    text-align     : center;
+    vertical-align : middle;
+    font-size      : 20px;
+    font-weight    : 600;
+    padding        : 4px;
+    color          : var(--default_table_text_color);
 }
 
-.season-episode-number-style 
-{
-    text-align    :center;
-    vertical-align: middle;
-    font-size  : 18px;
-    font-weight: 400;
-    padding    : 4px;
-    color      : var(--default_table_text_color);
-}
 
+/* This is the normal style used in most cells in the movie and tv tables */
 .tables-small-data-style 
 {
-    text-align    :center;
-    vertical-align: middle;
-    font-size  : 14px;
-    font-weight: 100;
-    padding    : 4px;
-    color      : var(--default_table_text_color);
+    text-align     : center;
+    vertical-align : middle;
+    font-size      : 14px;
+    font-weight    : 100;
+    padding        : 4px;
+    color          : var(--default_table_text_color);
 }
 
 /********************************************************

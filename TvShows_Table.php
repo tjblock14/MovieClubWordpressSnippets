@@ -29,14 +29,14 @@ if (!function_exists('tv_couple_config'))
     function tv_couple_config(string $couple_slug): ?array 
     {
         $map = 
-        [
+            [
             'TrevorTaylor' => ['endpoint' => 'tnt_tv_reviews',      'a' => 'Trevor',  'b' => 'Taylor',  'labelA' => 'Trevor', 'labelB' => 'Taylor'],
             'MarissaNathan'=> ['endpoint' => 'mn_tv_reviews',       'a' => 'Marissa', 'b' => 'Nathan',  'labelA' => 'Marissa','labelB' => 'Nathan'],
             'SierraBenett' => ['endpoint' => 'sb_tv_reviews',       'a' => 'Sierra',  'b' => 'Benett',  'labelA' => 'Sierra', 'labelB' => 'Benett'],
             'MomDad'       => ['endpoint' => 'mom_dad_tv_reviews',  'a' => 'Rob',     'b' => 'Terry',   'labelA' => 'Dad',    'labelB' => 'Mom'],
             'MiaLogan'     => ['endpoint' => 'mia_logan_tv_reviews','a' => 'Mia',     'b' => 'Logan',   'labelA' => 'Mia',    'labelB' => 'Logan'],
             'AnnieFelix'   => ['endpoint' => 'af_tv_reviews',       'a' => 'Annie',   'b' => 'Felix',   'labelA' => 'Annie',  'labelB' => 'Felix'],
-        ];
+            ];
 
         return $map[$couple_slug] ?? null;
     }
@@ -63,10 +63,16 @@ if (!function_exists('tv_build_url'))
     }
 }
 
-/**
- * Map a numeric rating to a background color.
- * (Return just the color string; callers handle inline style.)
- */
+/***********************************************************************
+ * FUNCTION : color_rating_cell
+ * INPUTS   : 
+ *      $rating : The rating of the cell we want to get the color for
+ * OUTPUTS  :
+ *      We return a specific color, depending on what the rating is
+ * PURPOSE  : 
+ *      Select and return the background color for the rating cell,
+ *      depending on what the rating value of the current cell is
+ ***********************************************************************/
 if (!function_exists('color_rating_cell')) 
 {
     function color_rating_cell($rating) 
@@ -128,34 +134,35 @@ if (!function_exists('review_value'))
                 return $reviews[$key][$field];
             }
         }
+
         return '';
     }
 }
 
 /**
- * Core: register one shortcode for a couple’s table.
- *
- * PARAM ORDER (IMPORTANT):
- *  - $couple_slug is REQUIRED because your JS uses it for PATCH/POST routing.
- *
- * @param string $shortcode   The shortcode name to register (e.g., 'tnt_tv_show_table')
- * @param string $endpoint    WPGetAPI endpoint key (e.g., 'tnt_tv_reviews')
- * @param string $reviewerA   Reviewer A key as used by your API (e.g., 'Trevor' or 'rob')
- * @param string $reviewerB   Reviewer B key as used by your API (e.g., 'Taylor' or 'terry')
- * @param string $couple_slug Slug as stored in backend (e.g., 'TrevorTaylor')
- * @param string|null $labelA Optional display label for A (e.g., 'Dad'); defaults to $reviewerA
- * @param string|null $labelB Optional display label for B (e.g., 'Mom'); defaults to $reviewerB
- */
+* Core: register one shortcode for a couple’s table.
+*
+* PARAM ORDER (IMPORTANT):
+*  - $couple_slug is REQUIRED because your JS uses it for PATCH/POST routing.
+*
+* @param string $shortcode   The shortcode name to register (e.g., 'tnt_tv_show_table')
+* @param string $endpoint    WPGetAPI endpoint key (e.g., 'tnt_tv_reviews')
+* @param string $reviewerA   Reviewer A key as used by your API (e.g., 'Trevor' or 'rob')
+* @param string $reviewerB   Reviewer B key as used by your API (e.g., 'Taylor' or 'terry')
+* @param string $couple_slug Slug as stored in backend (e.g., 'TrevorTaylor')
+* @param string|null $labelA Optional display label for A (e.g., 'Dad'); defaults to $reviewerA
+* @param string|null $labelB Optional display label for B (e.g., 'Mom'); defaults to $reviewerB
+*/
 if (!function_exists('add_TvShow_table_shortcode'))
 {
     function add_TvShow_table_shortcode(
-        string $shortcode,
-        string $endpoint,
-        string $reviewerA,
-        string $reviewerB,
-        string $couple_slug,
-        ?string $labelA = null,
-        ?string $labelB = null
+    string $shortcode,
+    string $endpoint,
+    string $reviewerA,
+    string $reviewerB,
+    string $couple_slug,
+    ?string $labelA = null,
+    ?string $labelB = null
     )
     {
         add_shortcode($shortcode, function() use ($endpoint, $reviewerA, $reviewerB, $labelA, $labelB, $couple_slug)
@@ -165,114 +172,89 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 'return' => 'body',
                 'debug'  => false,
                 'cache'  => false,
-            ]);
+                ]);
 
             $data = json_decode($data, true);
 
             // Validate payload shape
             if (!is_array($data) || !isset($data['results']) || !is_array($data['results'])) 
-                {
+            {
                 return '<p>Error: No data returned</p>';
             }
+
             $TvShows = $data['results'];
 
             // Normalize labels for headers (allow custom labels like "Dad"/"Mom")
             $displayA = $labelA ?? $reviewerA;
             $displayB = $labelB ?? $reviewerB;
 
-            /********************************************************************
-             * INLINE CSS: scroll wrapper + sticky header (SOLID + divider line)
-             ********************************************************************/
+            // This creates the sort bar for tv shows, with all of the valid options
             $html = '
-            <style>
-            /* The scroll viewport: shows ~5 rows then scrolls */
-            .mc-table-scroll-wrapper 
-            {
-                /* Center the viewport */
-                width: fit-content;
-                max-width: 100%;
-                margin: 0 auto;
-                display: block;
-
-                /* Scrolling */
-                max-height: 700px;            /* tweak for #rows visible */
-                overflow-y: auto;
-                overflow-x: auto;
-
-                /* Border/frame */
-                border: 2px solid black;
-                border-radius: 4px;
-
-                -webkit-overflow-scrolling: touch;
-
-                /* IMPORTANT: isolate stacking so site dropdowns render above */
-                position: relative;
-                isolation: isolate;
-                z-index: 0;
-            }
-
-            /* Keep your table behavior */
-            .mc-table-scroll-wrapper table 
-            {
-                width: max-content;
-                border-collapse: collapse;
-                font-size: 14px;
-                border: none;                 /* border is on wrapper */
-            }
-
-            /* Make thead itself non-transparent */
-            .mc-table-scroll-wrapper thead,
-            .mc-table-scroll-wrapper thead tr 
-            {
-                background-color: #3a0f14;    /* your maroon */
-            }
-
-            /* Sticky header cells */
-            .mc-table-scroll-wrapper thead th.table-title-cells-style 
-            {
-                position: sticky;
-                top: 0;
-                z-index: 5;                   /* above body cells */
-
-                /* MUST be opaque to stop bleed-through */
-                background-color: #3a0f14;
-                background-clip: padding-box;
-
-                /* Sticky-safe bottom divider line that ALWAYS stays visible */
-                border-bottom: none !important;
-                box-shadow: inset 0 -1px 0 var(--default_table_text_color);
-            }
-            </style>
-            ';
-
-            // ===== SORT BAR =====
-            $html .= ' <div class="TvShow-sortbar" style="margin:8px 0; display:flex; gap:8px; align-items:center;">
-                      <label for="TvShow-sort" style="font-weight:600;">Sort by:</label>
-                      <select id="TvShow-sort" class="TvShow-sort">
-                        <option value="avg_desc">Couple Average: high → low</option>
-                        <option value="avg_asc">Couple Average: low → high</option>
-                        <option value="u1_desc">' . esc_html($displayA) . ' rating — high → low</option>
-                        <option value="u1_asc">' . esc_html($displayA) . ' rating — low → high</option>
-                        <option value="u2_desc">' . esc_html($displayB) . ' rating — high → low</option>
-                        <option value="u2_asc">' . esc_html($displayB) . ' rating — low → high</option>
-                        <option value="title_az">Title — A → Z</option>
-                        <option value="director_az">Director — A → Z</option>
-                      </select>
-                    </div>';
+                <div 
+                    class = "TvShow-sortbar"
+                    style = "margin : 8px 0; display : flex; gap : 8px; align-items : center;">
+                    <label 
+                        for = "TvShow-sort" 
+                        style = "font-weight : 600;" > Sort by:
+                    </label>
+                    <select 
+                        id = "TvShow-sort" 
+                        class = "TvShow-sort" >
+                        <option 
+                            value = "avg_desc" > Couple Average: high → low
+                        </option>
+                        <option 
+                            value = "avg_asc" > Couple Average: low → high
+                        </option>
+                        <option 
+                            value = "u1_desc" > ' . esc_html($displayA) . ' rating — high → low
+                        </option>
+                        <option 
+                            value = "u1_asc" > ' . esc_html($displayA) . ' rating — low → high
+                        </option>
+                        <option 
+                            value = "u2_desc" > ' . esc_html($displayB) . ' rating — high → low
+                        </option>
+                        <option
+                            value = "u2_asc" > ' . esc_html($displayB) . ' rating — low → high
+                        </option>
+                        <option 
+                            value = "title_az" > Title — A → Z
+                        </option>
+                        <option 
+                            value = "director_az" > Director — A → Z
+                        </option>
+                    </select>
+                </div>';
 
             // Build table (WRAPPED in mc-table-scroll-wrapper)
-            $html .= '<div class="mc-table-scroll-wrapper">
-   <table id="TvShow-table" data-user1="' . esc_attr(strtolower($reviewerA)) . '" data-user2="' . esc_attr(strtolower($reviewerB)) . '" style="border-collapse: collapse; width: max-content; font-size: 14px; border: var(--default_table_text_color);">
-        <thead>
-            <tr>
-                <th class = "table-title-cells-style show-image-column">Image</th>
-                <th class = "table-title-cells-style short-info-column-width"># of Seasons</th>
-                <th class = "table-title-cells-style">' . esc_html($displayA) . ' Rating</th>
-                <th class = "table-title-cells-style">' . esc_html($displayB) . ' Rating</th>
-                <th class = "table-title-cells-style">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average</th>
-            </tr>
-        </thead>
-        <tbody>';
+            $html .= '
+                <div class = "mc-table-scroll-wrapper" >
+                <table 
+                    id         = "TvShow-table" 
+                    data-user1 = "' . esc_attr(strtolower($reviewerA)) . '"
+                    data-user2 = "' . esc_attr(strtolower($reviewerB)) . '"
+                    style      = "border-collapse : collapse; width : max-content; font-size : 14px; border : var(--default_table_text_color);" >
+                <thead>
+                    <tr>
+                        <th
+                            class = "table-title-cells-style show-image-column" > Image
+                        </th>
+                        <th
+                            class = "table-title-cells-style short-info-column-width" > # of Seasons
+                        </th>
+                        <th
+                            class = "table-title-cells-style">' . esc_html($displayA) . ' Rating
+                        </th>
+                        <th
+                            class = "table-title-cells-style">' . esc_html($displayB) . ' Rating
+                        </th>
+                        <th
+                            class = "table-title-cells-style">' . esc_html($displayA) . ' and ' . esc_html($displayB) . ' Average
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>';
 
             /* Create the row for every TV show in the database */
             foreach ($TvShows as $TvShow)
@@ -285,30 +267,38 @@ if (!function_exists('add_TvShow_table_shortcode'))
 
                 $show_summary = wp_kses_post($TvShow['summary'] ?? ''); // remove surrounding <p>
 
-                // MAIN SHOW ROW
+                // MAIN SHOW ROW    
                 $current_url = (is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                 $seasons_page = tv_page_url_by_slug('tv-show-seasons');
                 $seasons_url  = tv_build_url($seasons_page, [
                     'couple'    => $couple_slug,
                     'show_id'   => $TvShow_id,
                     'return_to' => rawurlencode($current_url),
-                ]);
-                $html .= '<tr class="tvshow-row" data-show-id="' . esc_attr($TvShow_id) . '" data-seasons-url="' . esc_url($seasons_url) . '">';
+                    ]);
+
+                $html .= '<tr class = "tvshow-row"
+                    data-show-id = "' . esc_attr($TvShow_id) . '"
+                    data-seasons-url = "' . esc_url($seasons_url) . '" > ';
 
                 /* Prepare the cell that displays the cover image of the show. */
                 // FIXME: Make this so when it is hovered, it displays the show title incase it isn\'t clear in the image
-                $html .= '<td class = "table-title-cells-style">'
-                            . '<img src="' . esc_url($TvShow['image_url']) . '" alt="' . esc_attr($TvShow['title']) . '" '
-                            . 'style="max-width: 120px; height: auto; border-radius: 4px;" />' .
-                        '</td>';
+                $html .= '
+                    <td 
+                        class = "table-title-cells-style" > ' . '
+                        <img 
+                            src   = "' . esc_url($TvShow['image_url']) . '" 
+                            alt   = "' . esc_attr($TvShow['title']) . '" ' . '
+                            style = "max-width : 120px; height : auto; border-radius : 4px;" 
+                        />' .
+                    '</td>';
 
-                /* # of seasons (no dropdown) */
-                $html .= ' <td class="tables-small-data-style">' . esc_html(safe_implode($TvShow['num_seasons'] ?? '')) . '</td>';
-                
+                /* # of seasons */
+                $html .= ' <td class = "tables-small-data-style" > ' . esc_html(safe_implode($TvShow['num_seasons'] ?? '')) . '</td>';
+
                 /* Grab the review array for the current Show */
                 $reviews = $TvShow['reviews'] ?? [];
 
-                /* Fetch all of the needed values for User 1 */
+                /* Get all of the review related information for the current TV Show for User 1 */
                 $user1_rating = review_value($reviews, $reviewerA, 'rating');
                 $user1_review = review_value($reviews, $reviewerA, 'review');
                 $user1_id     = review_value($reviews, $reviewerA, 'id');
@@ -316,33 +306,56 @@ if (!function_exists('add_TvShow_table_shortcode'))
                 $user1_data_reviewer = strtolower($reviewerA);
 
                 /* This cell for each show will hold the rating justification for the review in the cell. */
-                $html .= '<td class="rating-cell tv-rating-cell tables-small-data-style" data-review-type="tv" data-target-type="show"
-                          data-couple-slug="' . esc_attr($couple_slug) . '" data-reviewer="' . esc_attr($user1_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
-                          data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user1_id) . '"
-                          data-rating="' . esc_attr($user1_rating) . '" data-review="' . esc_attr($user1_review) . '"
-                          style="background-color: ' . esc_attr($user1_color) . ';">' . esc_html($user1_rating) . '</td>';
+                $html .= '
+                    <td 
+                        class = "rating-cell tv-rating-cell tables-small-data-style"
+                        data-review-type   = "tv"
+                        data-target-type   = "show"
+                        data-couple-slug   = "' . esc_attr($couple_slug) . '"
+                        data-reviewer      = "' . esc_attr($user1_data_reviewer) . '"
+                        data-id            = "' . esc_attr($TvShow_id) . '"
+                        data-tv-show-title = "' . esc_attr($title) . '"
+                        data-review-id     = "' . esc_attr($user1_id) . '"
+                        data-rating        = "' . esc_attr($user1_rating) . '"
+                        data-review        = "' . esc_attr($user1_review) . '"
+                        style = "background-color : ' . esc_attr($user1_color) . ';" > ' . esc_html($user1_rating) . 
+                    '</td>';
 
-                /* Fetch all of the needed values for User 2 */
+                /* Get all of the review related information for the current TV Show for User 2 */
                 $user2_rating = review_value($reviews, $reviewerB, 'rating');
                 $user2_review = review_value($reviews, $reviewerB, 'review');
                 $user2_id     = review_value($reviews, $reviewerB, 'id');
                 $user2_color  = color_rating_cell($user2_rating);
                 $user2_data_reviewer = strtolower($reviewerB);
 
-                $html .= '<td class="rating-cell tv-rating-cell tables-small-data-style" data-review-type="tv" data-target-type="show"
-                          data-couple-slug="' . esc_attr($couple_slug) . '" data-reviewer="' . esc_attr($user2_data_reviewer) . '" data-id="' . esc_attr($TvShow_id) . '"
-                          data-tv-show-title="' . esc_attr($title) . '" data-review-id="' . esc_attr($user2_id) . '"
-                          data-rating="' . esc_attr($user2_rating) . '" data-review="' . esc_attr($user2_review) . '"
-                          style="background-color: ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . '</td>';
+                $html .= '
+                    <td 
+                        class = "rating-cell tv-rating-cell tables-small-data-style"
+                        data-review-type   = "tv"
+                        data-target-type   = "show"
+                        data-couple-slug   = "' . esc_attr($couple_slug) . '"
+                        data-reviewer      = "' . esc_attr($user2_data_reviewer) . '"
+                        data-id            = "' . esc_attr($TvShow_id) . '"
+                        data-tv-show-title = "' . esc_attr($title) . '"
+                        data-review-id     = "' . esc_attr($user2_id) . '"
+                        data-rating        = "' . esc_attr($user2_rating) . '"
+                        data-review        = "' . esc_attr($user2_review) . '"
+                        style = "background-color : ' . esc_attr($user2_color) . ';">' . esc_html($user2_rating) . 
+                    '</td>';
 
-                /* Calculate the average rating for the current couple and prepare the background color */
+                /* Calculate the average rating for the current couple for the current TV Show and prepare the background color */
                 $avg_rating = (is_numeric($user1_rating) && is_numeric($user2_rating))
-                               ? round(($user1_rating + $user2_rating) / 2, 2) : '';
+                                ? round(($user1_rating + $user2_rating) / 2, 2) : '';
+                
                 $avg_color = color_rating_cell($avg_rating);
 
                 /* Setup and display the average rating cell */
-                $html .= '<td class="avg-cell rating-cell" data-rating="' . esc_attr($avg_rating) . '" style="background-color: ' . esc_attr($avg_color) . ';">'
-                          . esc_html($avg_rating) . '</td>';
+                $html .= '
+                    <td
+                        class = "avg-cell rating-cell"
+                        data-rating = "' . esc_attr($avg_rating) . '"
+                        style = "background-color : ' . esc_attr($avg_color) . ';" > ' . esc_html($avg_rating) . 
+                    '</td>';
 
                 /* We are done with the row */
                 $html .= '</tr>';
@@ -350,236 +363,183 @@ if (!function_exists('add_TvShow_table_shortcode'))
 
             $html .= '</tbody></table></div>';
 
-            // ===== SORTING SCRIPT =====
+            /****************************************************************
+             * This section is a script that is used for sorting the table, 
+             * based on what is selected in the sort bar
+             ****************************************************************/
             $html .= '
-<script>
-(function() {
-  function asNumber(v)
-  {
-    if (v === null || v === undefined) return NaN;
-    const n = parseFloat(String(v).replace(",", "."));
-    return Number.isFinite(n) ? n : NaN;
-  }
+            <script>
+                (function()
+                {
+                    function asNumber(v)
+                    {
+                        if (v === null || v === undefined) 
+                        {
+                            return NaN;
+                        }
+                            
+                        const n = parseFloat(String(v).replace(",", "."));
 
-  function text(el)
-  {
-    return (el && el.textContent || "").trim();
-  }
+                        return Number.isFinite(n) ? n : NaN;
+                    }
 
-  function getReviewerCell(row, reviewer)
-  {
-    return row.querySelector(\'.rating-cell[data-reviewer="\' + reviewer + \'"]\');
-  }
+                    function text(el)
+                    {
+                        return (el && el.textContent || "").trim();
+                    }
 
-  function getAvgCell(row)
-  {
-    return row.querySelector(".avg-cell");
-  }
+                    function getReviewerCell(row, reviewer)
+                    {
+                        return row.querySelector(\'.rating-cell[data-reviewer="\' + reviewer + \'"]\');
+                    }
 
-  function getKey(row, mode, u1, u2)
-  {
-    switch (mode)
-    {
-      case "u1_desc":
-      case "u1_asc":
-        {
-            const c = getReviewerCell(row, u1);
-            return asNumber(c ? c.dataset.rating : NaN);
-        }
+                    function getAvgCell(row)
+                    {
+                        return row.querySelector(".avg-cell");
+                    }
 
-      case "u2_desc" :
-      case "u2_asc"  :
-        {
-            const c = getReviewerCell(row, u2);
-            return asNumber(c ? c.dataset.rating : NaN);
-        }
+                    function getKey(row, mode, u1, u2)
+                    {
+                        switch (mode)
+                        {
+                            case "u1_desc":
+                            case "u1_asc":
+                            {
+                                const c = getReviewerCell(row, u1);
+                                return asNumber(c ? c.dataset.rating : NaN);
+                            }
 
-      case "avg_desc":
-      case "avg_asc":
-        {
-            const c = getAvgCell(row);
-            return asNumber(c ? c.dataset.rating : NaN);
-        }
-      case "title_az":
-        return text(row.querySelector(".title-cell")).toLowerCase();
+                            case "u2_desc" :
+                            case "u2_asc"  :
+                            {
+                                const c = getReviewerCell(row, u2);
+                                return asNumber(c ? c.dataset.rating : NaN);
+                            }
 
-      case "director_az":
-        return text(row.querySelector(".director-cell")).toLowerCase();
+                            case "avg_desc":
+                            case "avg_asc":
+                            {
+                                const c = getAvgCell(row);
+                                return asNumber(c ? c.dataset.rating : NaN);
+                            }
 
-      default:
-        return "";
-    }
-  }
+                            case "title_az":
+                                return text(row.querySelector(".title-cell")).toLowerCase();
 
-  function compareValues(a, b, numeric, asc)
-  {
-    if (numeric)
-    {
-      const aNaN = Number.isNaN(a), bNaN = Number.isNaN(b);
-      if (aNaN && bNaN) return 0;
-      if (aNaN) return 1;
-      if (bNaN) return -1;
-      return asc ? a - b : b - a;
-    }
-    else
-    {
-      if (a === b) return 0;
-      if (asc) return a < b ? -1 : 1;
-      return a > b ? -1 : 1;
-    }
-  }
+                            case "director_az":
+                                return text(row.querySelector(".director-cell")).toLowerCase();
 
-  function sortTable(mode)
-  {
-    const table = document.getElementById("TvShow-table");
-    if (!table) return;
+                            default:
+                                return "";
+                        }
+                    }
 
-    const u1 = (table.dataset.user1 || "").toLowerCase();
-    const u2 = (table.dataset.user2 || "").toLowerCase();
-    const tbody = table.querySelector("tbody") || table;
+                    function compareValues(a, b, numeric, asc)
+                    {
+                        if (numeric)
+                        {
+                            const aNaN = Number.isNaN(a), bNaN = Number.isNaN(b);
+                            if(aNaN && bNaN)
+                            {
+                                return 0;
+                            }
+                            if(aNaN)
+                            {
+                                return 1;
+                            }
+                            if(bNaN)
+                            {
+                                return -1;
+                            }
 
-    const rows = Array.from(tbody.querySelectorAll("tr"));
-    const indexed = rows.map((row, idx) => ({ row, idx, key: getKey(row, mode, u1, u2) }));
+                            return asc ? a - b : b - a;
+                        }
+                        else
+                        {
+                            if(a === b)
+                            {
+                                return 0;
+                            }
+                            if(asc)
+                            {
+                                return a < b ? -1 : 1;
+                            }
 
-    const numericModes = new Set(["u1_desc","u1_asc","u2_desc","u2_asc","avg_desc","avg_asc"]);
-    const asc = mode.endsWith("_asc");
-    const isNumeric = numericModes.has(mode);
+                            return a > b ? -1 : 1;
+                        }
+                    }
 
-    indexed.sort((A, B) =>
-    {
-      const cmp = compareValues(A.key, B.key, isNumeric, asc);
-      return cmp !== 0 ? cmp : (A.idx - B.idx);
-    });
+                    function sortTable(mode)
+                    {
+                        const table = document.getElementById("TvShow-table");
+                        
+                        if(!table)
+                        {
+                            return;
+                        }
 
-    indexed.forEach(item => tbody.appendChild(item.row));
-  }
+                        const u1    = (table.dataset.user1 || "").toLowerCase();
+                        const u2    = (table.dataset.user2 || "").toLowerCase();
+                        const tbody = table.querySelector("tbody") || table;
 
-  document.addEventListener("DOMContentLoaded", function()
-  {
-    const sel = document.getElementById("TvShow-sort");
-    if (!sel) return;
+                        const rows    = Array.from(tbody.querySelectorAll("tr"));
+                        const indexed = rows.map((row, idx) => ({ row, idx, key: getKey(row, mode, u1, u2) }));
 
-    sel.addEventListener("change", function()
-    {
-      sortTable(this.value);
-    });
-  });
-})();
-</script>';
+                        const numericModes = new Set(["u1_desc","u1_asc","u2_desc","u2_asc","avg_desc","avg_asc"]);
+                        const asc          = mode.endsWith("_asc");
+                        const isNumeric    = numericModes.has(mode);
 
-            // ===== CSS for nested rows + toggles =====
-            $html .= '
-<style>
-  .is-collapsed { display: none; }
-  .tvshow-main-cell { cursor: pointer; }
-  .season-row { cursor: pointer; }
-  .tv-toggle {
-    display: inline-block;
-    margin-left: 4px;
-    font-size: 10px;
-    cursor: pointer;
-  }
-  .seasons-wrapper {
-    margin-top: 4px;
-    border-left: 2px solid rgba(255,255,255,0.2);
-    padding-left: 8px;
-  }
-</style>';
+                        indexed.sort((A, B) =>
+                            {
+                                const cmp = compareValues(A.key, B.key, isNumeric, asc);
+                                return cmp !== 0 ? cmp : (A.idx - B.idx);
+                            }
+                        );
 
-            /********************************************************************
-             * UPDATED TOGGLE JS:
-             * - Only ONE show open at a time
-             * - Only ONE season open at a time
-             ********************************************************************/
-            $html .= '
-<script>
-(function() {
-  function collapseAllShows() {
-    document.querySelectorAll(".tvshow-seasons-row").forEach(r => r.classList.add("is-collapsed"));
-  }
+                        indexed.forEach(item => tbody.appendChild(item.row));
+                    }
 
-  function collapseAllSeasons() {
-    document.querySelectorAll(".season-episodes-row").forEach(r => r.classList.add("is-collapsed"));
-  }
+                    document.addEventListener("DOMContentLoaded", function()
+                    {
+                        const sel = document.getElementById("TvShow-sort");
+                        if(!sel)
+                        {
+                            return;
+                        }
 
-  document.addEventListener("click", function(event) {
-    let toggle = event.target.closest(".tv-toggle");
-
-    // If not clicking directly on arrow, see if we clicked the title cell or season row
-    if (!toggle) {
-      const showCell = event.target.closest(".tvshow-main-cell");
-      if (showCell) {
-        toggle = showCell.querySelector(".tv-toggle-seasons");
-      } else {
-        const seasonRow = event.target.closest(".season-row");
-        if (seasonRow) {
-          toggle = seasonRow.querySelector(".tv-toggle-episodes");
-        }
-      }
-      if (!toggle) return;
-    }
-
-    const target = toggle.dataset.target;
-
-    // ===== SHOW TOGGLE (ONLY ONE OPEN) =====
-    if (target === "seasons") {
-      const showId = toggle.dataset.showId;
-      const row = document.querySelector(\'.tvshow-seasons-row[data-show-id="\' + showId + \'"]\');
-      if (!row) return;
-
-      const isOpening = row.classList.contains("is-collapsed");
-
-      // Close everything first
-      collapseAllShows();
-      collapseAllSeasons();
-
-      // If we were opening, open this one
-      if (isOpening) {
-        row.classList.remove("is-collapsed");
-      }
-      return;
-    }
-
-    // ===== SEASON TOGGLE (ONLY ONE OPEN) =====
-    if (target === "episodes") {
-      const seasonId = toggle.dataset.seasonId;
-      const row = document.querySelector(\'.season-episodes-row[data-season-id="\' + seasonId + \'"]\');
-      if (!row) return;
-
-      const isOpening = row.classList.contains("is-collapsed");
-
-      // Close all seasons first
-      collapseAllSeasons();
-
-      // If we were opening, open this one
-      if (isOpening) {
-        row.classList.remove("is-collapsed");
-      }
-      return;
-    }
-  });
-})();
-
+                        sel.addEventListener("change", function()
+                        {
+                            sortTable(this.value);
+                        });
+                    });
+                })();
             </script>';
 
-            $html .= '<script>
+            
+
+            $html .= '
+            <script>
                 (function() 
                 {
                     document.addEventListener("click", function(e) 
                     {
                         const row = e.target.closest("tr.tvshow-row");
-                        if (!row) return;
+                        
+                        if(!row)
+                        {
+                            return;
+                        }
 
                         // Dont navigate if clicking on interactive elements
                         if(   e.target.closest(".rating-cell") || e.target.closest(".tv-toggle")
-                        || e.target.closest("a") || e.target.closest("button") || e.target.closest("input")
-                        || e.target.closest("textarea") || e.target.closest("select") ) 
+                           || e.target.closest("a") || e.target.closest("button") || e.target.closest("input")
+                           || e.target.closest("textarea") || e.target.closest("select") ) 
                         {
                             return;
                         }
 
                         const url = row.dataset.seasonsUrl;
-                        if (url)
+                        if(url)
                         {
                             window.location.href = url;
                         }
@@ -588,9 +548,12 @@ if (!function_exists('add_TvShow_table_shortcode'))
             </script>';
 
             // ===== TVMaze CREDIT (required attribution) =====
-            $html .= '<div class="tvmaze-credit" style="font-size:12px; margin-top:8px; opacity:0.7;">
-               TV Show Data provided by <a href="https://www.tvmaze.com" target="_blank" rel="noopener noreferrer">TVmaze.com</a>.
-            </div>';
+            $html .= '
+                <div 
+                    class = "tvmaze-credit" 
+                    style = "font-size : 12px; margin-top : 8px; opacity : 0.7;" >
+                    TV Show Data provided by <a href="https://www.tvmaze.com" target="_blank" rel="noopener noreferrer">TVmaze.com</a>.
+                </div>';
 
             return $html;
         });
@@ -598,8 +561,8 @@ if (!function_exists('add_TvShow_table_shortcode'))
 }
 
 /*******************************************************
- * Register your tables using the single function.
- *******************************************************/
+* Register your tables using the single function.
+*******************************************************/
 
 // Trevor / Taylor
 add_TvShow_table_shortcode('tnt_tv_show_table', 'tnt_tv_reviews', 'Trevor', 'Taylor', 'TrevorTaylor');

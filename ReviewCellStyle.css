@@ -1,38 +1,40 @@
-.review-cell {
-  width : 200px;
+/* This is used to anchor the tooltip to the movie poster image */
+.movie-poster-tooltip 
+{
+    position : relative;
+    display  : inline-block;
 }
 
-.movie-poster-tooltip {
-  position: relative;
-  display: inline-block;
+/* This is the actual tooltip itself, how the title of the movie will be displayed when its poster is hovered */
+.movie-poster-tooltip::after 
+{
+    content  : attr(data-title);
+    position : absolute;
+    bottom   : 105%;
+    left     : 0;                 /* anchor to cell left */
+
+    min-width : 100%;             /* at least as wide as the cell */
+    max-width : 260px;            /* allow growth to the right */
+
+    text-align  : center;          /* centers title when it fits */
+    white-space : normal;
+    word-break  : break-word;
+
+    background    : rgba(0, 0, 0, 0.9);
+    color         : #fff;
+    font-size     : 13px;
+    padding       : 6px 10px;
+    border-radius : 6px;
+
+    opacity        : 0;
+    pointer-events : none;
+    transition     : opacity 0.15s ease-in-out;
+    z-index        : 9999;
 }
 
-.movie-poster-tooltip::after {
-  content: attr(data-title);
-  position: absolute;
-  bottom: 105%;
-  left: 0;                     /* anchor to cell left */
-
-  min-width: 100%;             /* 👈 at least as wide as the cell */
-  max-width: 260px;            /* allow growth to the right */
-
-  text-align: center;          /* 👈 centers title when it fits */
-  white-space: normal;
-  word-break: break-word;
-
-  background: rgba(0, 0, 0, 0.9);
-  color: #fff;
-  font-size: 13px;
-  padding: 6px 10px;
-  border-radius: 6px;
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease-in-out;
-  z-index: 9999;
-}
-
-.movie-poster-tooltip:hover::after {
-  opacity: 1;
+/* This allows the tooltip to fade in smoothly? */
+.movie-poster-tooltip:hover::after 
+{
+    opacity : 1;
 }
 

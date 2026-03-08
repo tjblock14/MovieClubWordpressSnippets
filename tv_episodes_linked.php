@@ -87,31 +87,50 @@ add_shortcode('tv_episodes_view', function()
         return $html . '<p>No episodes found.</p>';
     }
 
-    $html .= '<table style="width:100%; border-collapse:collapse;">';
-    $html .= '<thead><tr>
-                <th class="table-title-cells-style">Ep</th>
-                <th class="table-title-cells-style">Title</th>
-                <th class="table-title-cells-style">Air Date</th>
-                <th class="table-title-cells-style">Runtime</th>
-                <th class="table-title-cells-style">' . esc_html($cfg['labelA']) . ' Rating</th>
-                <th class="table-title-cells-style">' . esc_html($cfg['labelB']) . ' Rating</th>
-              </tr></thead><tbody>';
+    /* Create the header row of the table */
+    $html .= '<table style = "width : 100%; border-collapse : collapse;" >';
+    $html .= '
+            <thead><tr>
+                <th 
+                    class = "table-title-cells-style" >Ep
+                </th>
+                <th
+                    class = "table-title-cells-style" >Title
+                </th>
+                <th
+                    class = "table-title-cells-style" >Air Date
+                </th>
+                <th
+                    class = "table-title-cells-style" >Runtime
+                </th>
+                <th
+                    class = "table-title-cells-style" >' . esc_html($cfg['labelA']) . ' Rating
+                </th>
+                <th
+                    class = "table-title-cells-style" >' . esc_html($cfg['labelB']) . ' Rating
+                </th>
+            </tr></thead><tbody>';
 
+    /* Now, create a row for each episode of the selected TV show for the current couple */
     foreach ($episodes as $ep) 
     {
-        $ep_id    = intval($ep['id'] ?? 0); // <-- if your API uses a different key, change here
+        /* Get all the relevant information we want about the current episode */
+        $ep_id    = intval($ep['id'] ?? 0); 
         $ep_num   = esc_html($ep['episode_number'] ?? '');
         $ep_title = esc_html($ep['episode_title'] ?? '');
         $air      = esc_html($ep['air_date'] ?? '');
         $rt       = esc_html($ep['episode_runtime'] ?? '');
 
+        /* Grab the actual review array for this episode */
         $reviews = $ep['reviews'] ?? [];
 
+        /* Get all of the information for both users of the current couple's ratings for this episode */
         $u1 = review_value($reviews, $cfg['a'], 'rating');
         $u2 = review_value($reviews, $cfg['b'], 'rating');
         $c1 = color_rating_cell($u1);
         $c2 = color_rating_cell($u2);
 
+        /* Get all of the information for both users of the current couple's reviews for this episode */
         $u1_review = review_value($reviews, $cfg['a'], 'review');
         $u2_review = review_value($reviews, $cfg['b'], 'review');
         $u1_id     = review_value($reviews, $cfg['a'], 'id');
@@ -122,36 +141,42 @@ add_shortcode('tv_episodes_view', function()
 
         $ep_title_for_modal = $show_title_raw . ' — S' . ($season['season_number'] ?? '') . 'E' . ($ep['episode_number'] ?? '') . ' — ' . ($ep['episode_title'] ?? '');
 
-        $html .= '<tr>
-                    <td class="tables-small-data-style">' . $ep_num . '</td>
-                    <td class="tables-small-data-style">' . $ep_title . '</td>
-                    <td class="tables-small-data-style">' . $air . '</td>
-                    <td class="tables-small-data-style">' . $rt . '</td>
+        /* Actually create the row here */
+        $html .= 
+                '<tr>
+                    <td class = "tables-small-data-style" >' . $ep_num . '</td>
+                    <td class = "tables-small-data-style" >' . $ep_title . '</td>
+                    <td class = "tables-small-data-style" >' . $air . '</td>
+                    <td class = "tables-small-data-style ">' . $rt . '</td>
 
-                    <td class="rating-cell tv-rating-cell tables-small-data-style"
-                        data-review-type="tv"
-                        data-target-type="episode"
-                        data-couple-slug="' . esc_attr($couple) . '"
-                        data-reviewer="' . esc_attr($u1_reviewer) . '"
-                        data-id="' . esc_attr($ep_id) . '"
-                        data-tv-show-title="' . esc_attr($ep_title_for_modal) . '"
-                        data-review-id="' . esc_attr($u1_id) . '"
-                        data-rating="' . esc_attr($u1) . '"
-                        data-review="' . esc_attr($u1_review) . '"
-                        style="background-color:' . esc_attr($c1) . ';">' . esc_html($u1) . '</td>
+                    <td 
+                        class = "rating-cell tv-rating-cell tables-small-data-style"
+                        data-review-type   = "tv"
+                        data-target-type   = "episode"
+                        data-couple-slug   = "' . esc_attr($couple) . '"
+                        data-reviewer      = "' . esc_attr($u1_reviewer) . '"
+                        data-id            = "' . esc_attr($ep_id) . '"
+                        data-tv-show-title = "' . esc_attr($ep_title_for_modal) . '"
+                        data-review-id     = "' . esc_attr($u1_id) . '"
+                        data-rating        = "' . esc_attr($u1) . '"
+                        data-review        = "' . esc_attr($u1_review) . '"
+                        style = "background-color:' . esc_attr($c1) . ';">' . esc_html($u1) . 
+                    '</td>
 
-                    <td class="rating-cell tv-rating-cell tables-small-data-style"
-                        data-review-type="tv"
-                        data-target-type="episode"
-                        data-couple-slug="' . esc_attr($couple) . '"
-                        data-reviewer="' . esc_attr($u2_reviewer) . '"
-                        data-id="' . esc_attr($ep_id) . '"
-                        data-tv-show-title="' . esc_attr($ep_title_for_modal) . '"
-                        data-review-id="' . esc_attr($u2_id) . '"
-                        data-rating="' . esc_attr($u2) . '"
-                        data-review="' . esc_attr($u2_review) . '"
-                        style="background-color:' . esc_attr($c2) . ';">' . esc_html($u2) . '</td>
-                  </tr>';
+                    <td 
+                        class = "rating-cell tv-rating-cell tables-small-data-style"
+                        data-review-type   = "tv"
+                        data-target-type   = "episode"
+                        data-couple-slug   = "' . esc_attr($couple) . '"
+                        data-reviewer      = "' . esc_attr($u2_reviewer) . '"
+                        data-id            = "' . esc_attr($ep_id) . '"
+                        data-tv-show-title = "' . esc_attr($ep_title_for_modal) . '"
+                        data-review-id     = "' . esc_attr($u2_id) . '"
+                        data-rating        = "' . esc_attr($u2) . '"
+                        data-review        = "' . esc_attr($u2_review) . '"
+                        style = "background-color:' . esc_attr($c2) . ';">' . esc_html($u2) . 
+                    '</td>
+                </tr>';
     }
 
     $html .= '</tbody></table>';

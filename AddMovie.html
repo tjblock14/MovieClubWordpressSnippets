@@ -1,173 +1,194 @@
-<div id="tmdb-search" style="max-width:800px;margin:1rem auto;">
-  <label class = "add-tv-show-results" style="display:block;margin-bottom:.5rem;">Search movies</label>
-  <input id="movieq" type="text" placeholder="e.g., Inception" style="width:100%;padding:.6rem;border:1px solid #ccc;border-radius:.4rem;">
-  <div id="movie-results" style="margin-top:1rem;"></div>
+<div id = "tmdb-search" style = "max-width : 800px; margin : 1rem auto;" >
+    <label class = "add-tv-show-results" style = "display : block; margin-bottom : .5rem;" >
+        Search movies
+    </label>
+    <input
+        id = "movieq"
+        type = "text"
+        placeholder = "e.g., Inception"
+        style = "width : 100%; padding : .6rem; border : 1px solid #ccc; border-radius : .4rem;"
+    >
+    <div id = "movie-results" style = "margin-top : 1rem;" >
+    </div>
 
-  <!-- TMDB attribution (required) -->
-  <div style="margin-top:.8rem;font-size:.85rem;color:#666;">
-    This product uses the TMDB API but is not endorsed or certified by TMDB.
-  </div>
+    <!-- TMDB attribution (required) -->
+    <div style = "margin-top : .8rem; font-size : .85rem; color : #666;" >
+        This product uses the TMDB API but is not endorsed or certified by TMDB.
+    </div>
 </div>
 
 <script>
-(function () 
-{
-    const input = document.getElementById('movieq');
-    const resultsEl = document.getElementById('movie-results');
-    let t;
-
-    const API_BASE = 'https://movieclubdatabase.onrender.com';
-
-    // ✅ Paste your TMDB "API Read Access Token" here (v4). Keep the quotes.
-    const TMDB_READ_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzMjM5ZjE4NTIwMGMyMzdiMGI3OTNlZTIxMDMxZDcwNCIsIm5iZiI6MTc2NzM5NTU5NS40NzMsInN1YiI6IjY5NTg1MTBiNzI1OGJmOTcyNGNiZDdmOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.26QF82MUCoZKV1nQrzQwA5i-9TkKUAVcXs5_pCrBI2Q';
-    // TMDB posters
-    const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w185';
-
-    // 🔑 Use the SAME key you already use for reviews
-    function getAccessToken() 
+    (function () 
     {
-        return localStorage.getItem('access_token');
-    }
+        const input = document.getElementById('movieq');
+        const resultsEl = document.getElementById('movie-results');
+        let t;
 
-    function escapeHtml(s) 
-    {
-        return String(s ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-    }
+        const API_BASE = 'https://movieclubdatabase.onrender.com';
 
-    async function importMovie(tmdbId, button) 
-    {
-        const token = getAccessToken();
-        if (!token) {
-        alert('Please log in (Movie Club API) before importing movies.');
-        button.disabled = false;
-        button.textContent = 'Select';
-        return;
-    }
+        // ✅ Paste your TMDB "API Read Access Token" here (v4). Keep the quotes.
+        const TMDB_READ_TOKEN = 'eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIzMjM5ZjE4NTIwMGMyMzdiMGI3OTNlZTIxMDMxZDcwNCIsIm5iZiI6MTc2NzM5NTU5NS40NzMsInN1YiI6IjY5NTg1MTBiNzI1OGJmOTcyNGNiZDdmOSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.26QF82MUCoZKV1nQrzQwA5i-9TkKUAVcXs5_pCrBI2Q';
+        // TMDB posters
+        const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w185';
 
-    try 
-    {
-        const res = await fetch(`${API_BASE}/api/movies/import_from_tmdb/`, 
+        // 🔑 Use the SAME key you already use for reviews
+        function getAccessToken() 
         {
-            method: 'POST',
-            headers: 
+            return localStorage.getItem('access_token');
+        }
+
+        function escapeHtml(s) 
+        {
+            return String(s ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+        }
+
+        async function importMovie(tmdbId, button) 
+        {
+            const token = getAccessToken();
+            if(!token)
             {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ tmdb_id: Number(tmdbId) })
-        });
+                alert('Please log in (Movie Club API) before importing movies.');
+                button.disabled = false;
+                button.textContent = 'Select';
 
-        if (!res.ok) 
-        {
-            const text = await res.text();
-            throw new Error(`Import failed (${res.status}): ${text}`);
+                return;
+            }
+
+            try 
+            {
+                const res = await fetch(`${API_BASE}/api/movies/import_from_tmdb/`, 
+                    {
+                        method: 'POST',
+                        headers: 
+                        {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ tmdb_id: Number(tmdbId) })
+                    });
+
+                if(!res.ok) 
+                {
+                    const text = await res.text();
+                    throw new Error(`Import failed (${res.status}): ${text}`);
+                }
+
+                await res.json();
+                button.textContent = 'Added ✓';
+                button.style.cursor = 'default';
+            }
+            catch(err) 
+            {
+                console.error(err);
+                alert('Import error: ' + err.message);
+                button.disabled = false;
+                button.textContent = 'Select';
+            }
         }
 
-        await res.json();
-        button.textContent = 'Added ✓';
-        button.style.cursor = 'default';
-    } 
-    catch (err) 
-    {
-        console.error(err);
-        alert('Import error: ' + err.message);
-        button.disabled = false;
-        button.textContent = 'Select';
-    }
-    }
-
-    function render(items) 
-    {
-        if (!items || !items.length) 
+        function render(items) 
         {
-        resultsEl.innerHTML = '<p>No results.</p>';
-        return;
-        }
+            if (!items || !items.length) 
+            {
+                resultsEl.innerHTML = '<p>No results.</p>';
+                return;
+            }
 
-        resultsEl.innerHTML = items.map((m) => 
-        {
-            const poster = m.poster_path ? `${TMDB_POSTER_BASE}${m.poster_path}` : '';
-            const title = m.title || 'Untitled';
-            const year = (m.release_date || '').slice(0, 4);
-            const overview = (m.overview || '').replace(/\s+/g,' ').trim().slice(0, 180);
-            const rating = (typeof m.vote_average === 'number') ? m.vote_average.toFixed(1) : '';
+            resultsEl.innerHTML = items.map((m) => 
+                {
+                    const poster = m.poster_path ? `${TMDB_POSTER_BASE}${m.poster_path}` : '';
+                    const title = m.title || 'Untitled';
+                    const year = (m.release_date || '').slice(0, 4);
+                    const overview = (m.overview || '').replace(/\s+/g,' ').trim().slice(0, 180);
+                    const rating = (typeof m.vote_average === 'number') ? m.vote_average.toFixed(1) : '';
 
-            return `
-            <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee;align-items:flex-start;">
-            <img src="${escapeHtml(poster)}" alt="" style="width:70px;height:96px;object-fit:cover;border-radius:6px;background:#f2f2f2;">
-            <div style="flex:1;">
-            <div class = "add-tv-show-results" style="font-weight:600">
-                ${escapeHtml(title)} ${year ? `(${escapeHtml(year)})` : ''} ${rating ? `<span style="font-weight:400;color:#666">• ${escapeHtml(rating)}/10</span>` : ''}
-            </div>
-            <div class = "add-tv-show-results" style="font-size:.9rem;margin:.3rem 0;">${escapeHtml(overview)}${overview.length === 180 ? '…' : ''}</div>
-            <button data-id="${escapeHtml(m.id)}" class="movie-select"
-                style="padding:.4rem .7rem;border:1px solid #ddd;border-radius:.4rem;background:#fff;cursor:pointer;">
-                Select
-            </button>
-            </div>
-            </div>`;
-        }).join('');
+                    return `
+                        <div style = "display : flex; gap : 12px; padding : 10px 0; border-bottom : 1px solid #eee; align-items : flex-start;" >
+                            <img
+                                src = "${escapeHtml(poster)}"
+                                alt = ""
+                                style = "width : 70px; height : 96px; object-fit : cover; border-radius : 6px; background : #f2f2f2;"
+                            >
+                            <div style = "flex : 1;" >
+                                <div class = "add-tv-show-results" style = "font-weight : 600" >
+                                    ${escapeHtml(title)} ${year ? `(${escapeHtml(year)})` : ''} ${rating ? `
+                                    <span style = "font-weight : 400; color : #666" > • ${escapeHtml(rating)}/10</span>` : ''}
+                                </div>
+                                <div class = "add-tv-show-results" style = "font-size : .9rem;margin : .3rem 0;" >
+                                    ${escapeHtml(overview)}${overview.length === 180 ? '…' : ''}
+                                </div>
+                                <button 
+                                    data-id = "${escapeHtml(m.id)}"
+                                    class = "movie-select"
+                                    style = "padding : .4rem .7rem; border : 1px solid #ddd; border-radius : .4rem; background : #fff; cursor : pointer;"
+                                >
+                                    Select
+                                </button>
+                            </div>
+                        </div>`;
+                }).join('');
 
-        resultsEl.querySelectorAll('.movie-select').forEach(btn => 
-        {
+            resultsEl.querySelectorAll('.movie-select').forEach(btn => 
+            {
                 btn.addEventListener('click', () => 
                 {
-                const id = btn.getAttribute('data-id');
-                btn.disabled = true;
-                btn.textContent = 'Adding…';
-                importMovie(id, btn);
+                    const id = btn.getAttribute('data-id');
+                    btn.disabled = true;
+                    btn.textContent = 'Adding…';
+                    importMovie(id, btn);
+                });
             });
-        });
-    }
-
-    async function searchTMDB(q) 
-    {
-        if (!q) 
-        {
-            resultsEl.innerHTML = '';
-            return;
         }
 
-    resultsEl.innerHTML = '<p>Searching…</p>';
-
-    try 
-    {
-        // TMDB search endpoint for movies
-        const url = `https://api.themoviedb.org/3/search/movie?language=en-US&include_adult=false&page=1&query=${encodeURIComponent(q)}`;
-
-        const res = await fetch(url, 
+        async function searchTMDB(q) 
         {
-            headers: 
+            if (!q) 
             {
-            'Authorization': `Bearer ${TMDB_READ_TOKEN}`,
-            'Accept': 'application/json'
+                resultsEl.innerHTML = '';
+                return;
             }
-        });
 
-        const text = await res.text();
-        if (!res.ok) {
-        throw new Error(`TMDB search failed (${res.status}): ${text.slice(0, 200)}`);
+            resultsEl.innerHTML = '<p>Searching…</p>';
+
+            try 
+            {
+                // TMDB search endpoint for movies
+                const url = `https://api.themoviedb.org/3/search/movie?language=en-US&include_adult=false&page=1&query=${encodeURIComponent(q)}`;
+
+                const res = await fetch(url, 
+                {
+                    headers: 
+                    {
+                        'Authorization': `Bearer ${TMDB_READ_TOKEN}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const text = await res.text();
+                if(!res.ok)
+                {
+                    throw new Error(`TMDB search failed (${res.status}): ${text.slice(0, 200)}`);
+                }
+
+                const data = JSON.parse(text);
+                render(data.results || []);
+            } 
+            catch (err) 
+            {
+                console.error(err);
+                resultsEl.innerHTML = `<p style = "color : #b00;" >Error searching TMDB. (${escapeHtml(err.message)})</p>`;
+            }
         }
 
-        const data = JSON.parse(text);
-        render(data.results || []);
-    } 
-    catch (err) 
-    {
-        console.error(err);
-        resultsEl.innerHTML = `<p style="color:#b00;">Error searching TMDB. (${escapeHtml(err.message)})</p>`;
-    }
-    }
-
-    input.addEventListener('input', () => 
-    {
-        clearTimeout(t);
-        t = setTimeout(() => searchTMDB(input.value.trim()), 350);
-    });
-})();
+        input.addEventListener('input', () => 
+        {
+            clearTimeout(t);
+            t = setTimeout(() => searchTMDB(input.value.trim()), 350);
+        });
+    })();
 </script>
