@@ -1,27 +1,38 @@
 (function ()
 {
-    // Prevent multiple intervals if this script loads more than once
+
+    /* If a token refresh interval is already running, do nothing */
     if(window.__tokenRefreshIntervalId)
     {
         return;
     }
 
+    /*******************************************************************************
+     * FUNCTION    : refreshAccessTokenOnce
+     * DESCRIPTION : 
+     *      This is an async function that performs one token refresh attempt.
+     *******************************************************************************/
     async function refreshAccessTokenOnce()
     {
-        // Always read the latest refresh token (don’t capture a stale one)
+        /* Grab the current refresh token */
         const refresh = localStorage.getItem("refresh_token");
+
         if(!refresh)
         {
+            /* There is no refresh token so there is nothing to refresh. */
             return;
         }
 
+        /* Create the variable that will eventuallyt hold the result of our fetch operation */
         let response;
+
+        /* Attempt to make the refresh request */
         try 
         {
             response = await fetch("https://movieclubdatabase.onrender.com/api/token/refresh/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ refresh })
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refresh })
                 });
         }
         catch(err)
@@ -36,7 +47,7 @@
         if(response.status >= 500)
         {
             console.warn(`⚠️ Token refresh server error (${response.status}). Keeping tokens; will retry.`);
-            
+
             return;
         }
 

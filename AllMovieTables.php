@@ -1,4 +1,5 @@
 <?php
+
 /*******************************************************
  * Movie Club – Consolidated Table Shortcodes (Single File)
  * - Define once, reuse for each couple via parameters.

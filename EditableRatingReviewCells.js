@@ -128,6 +128,47 @@ document.addEventListener("DOMContentLoaded", () =>
             grid-template-rows : auto 1fr auto;
         }
 
+        /* =========================
+        Mobile modal adjustments
+        ========================= */
+        @media (max-width: 600px)
+        {
+            .mc-card
+            {
+                width: 88vw;          /* narrower modal */
+                max-height: 92vh;
+                border-radius: 12px;
+            }
+
+            .mc-hd
+            {
+                padding: 12px 14px;
+                font-size: 16px;
+            }
+
+            .mc-bd
+            {
+                padding: 12px;
+            }
+
+            .mc-txt
+            {
+                min-height: 35vh;     /* smaller textarea on phones */
+                font-size: 14px;
+            }
+
+            .mc-ft
+            {
+                padding: 10px 12px;
+            }
+
+            .mc-btn
+            {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+
         .mc-hd
         {
             padding         : 18px 20px;
