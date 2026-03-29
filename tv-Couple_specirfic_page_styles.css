@@ -1,0 +1,170 @@
+/* TvShowHeader is the styles for the whole Tv Show Details block at the top of Couple Specific Seasons Pages */
+.TvShowHeader 
+{
+    gap           : 16px; 
+    align-items   : flex-start;
+    padding       : 14px;
+    margin        : 12px 0 16px 0;
+    border        : 1px solid rgba(255,255,255,0.15);
+    border-radius : 12px;
+    background    : rgba(0,0,0,0.12);
+}
+
+/* The Tv Show Poster inside of .TvShowHeader at the top of Couple Specific Seasons Pages */
+.TvShowPoster 
+{
+    width         : 140px; 
+    min-width     : 140px;
+    border-radius : 10px;
+    overflow      : hidden;
+    border        : 1px solid rgba(255,255,255,0.15);
+    background    : rgba(255,255,255,0.06);
+}
+
+/* This styles the actual image that is displayed inside of .TvShowPoster */
+.TvShowPoster img 
+{
+    width   : 100%; 
+    height  : auto; 
+    display : block; 
+}
+
+/* This is the rest of the content area in .TvShowHeader that is displayed to the right of the poster */
+.TvShowHeaderMain 
+{ 
+    flex      : 1; 
+    min-width : 220px; 
+    color     : var(--default_table_text_color) !important;
+}
+
+/* This is the container for all of the data we want to display such as status, number of seasons, cast, summary, etc, */
+.TvShowMetaGrid 
+{
+    display               : grid;
+    grid-template-columns : 1fr 1fr;
+    gap                   : 8px 16px;
+    margin                : 8px 0 10px 0;
+    font-size             : 14px;
+    opacity               : 0.95;
+}
+
+/* This targets anything with <b> tags inside of .TvShowMetaItem */
+.TvShowMetaItem b 
+{ 
+    font-weight  : 700; 
+    margin-right : 6px; 
+}
+
+/* This is the wrapper around all of the genre badges */
+.TvShowBadges
+{
+    display   : flex; 
+    flex-wrap : wrap; 
+    gap       : 8px; 
+    margin    : 8px 0 10px 0; 
+}
+
+/* The styling for what each badge will look like */
+.TvShowBadge 
+{
+    font-size     : 12px;
+    padding       : 4px 10px;
+    border-radius : 999px;
+    border        : 1px solid rgba(255,255,255,0.18);
+    background    : rgba(255,255,255,0.06);
+    white-space   : nowrap;
+}
+
+/* This is the section of the header block where the summary is displayed */
+.TvShowOverview 
+{
+    margin-top  : 8px;
+    font-size   : 14px;
+    line-height : 1.45;
+    opacity     : 0.95;
+}
+
+/* Anything within this media tag are overrides to make the layout look nicer on smaller screens (such as on mobile) */
+@media (max-width: 700px) 
+{
+    /* This will make it so rather than the Show information being next to the poster, it will be below it */
+    .TvShowHeader
+    { 
+        flex-direction : column; 
+    }
+
+    .TvShowPoster 
+    {
+        width     : 180px; 
+        min-width : 180px;
+    }
+
+    /* Sets the amount of columns the Show Information is displayed in the header to one column  */
+    .TvShowMetaGrid
+    {
+        grid-template-columns : 1fr; 
+    }
+}
+
+/*****************************************************************************
+ * FIXME: Move this section to another file
+ * The below classes are responsible for the scrolling of the tables (Couple
+ * Specific TV Show and Movie tables, as well as the Club Average Movie Table).
+ *****************************************************************************/
+/* The scroll viewport: shows ~5 rows then scrolls. This is the boxed scrolling area around the tables */
+.mc-table-scroll-wrapper 
+{
+    /* Center the viewport */
+    width     : fit-content;
+    max-width : 100%;
+    margin    : 0 auto;
+    display   : block;
+
+    /* Scrolling */
+    max-height : 700px;            /* tweak for #rows visible */
+    overflow-y : auto;
+    overflow-x : auto;
+
+    /* Border/frame */
+    border        : 2px solid black;
+    border-radius : 4px;
+
+    -webkit-overflow-scrolling : touch;
+
+    /* IMPORTANT: isolate stacking so site dropdowns render above */
+    position  : relative;
+    isolation : isolate;
+    z-index   : 0;
+}
+
+/* Styles any table placed inside the scroll wrapper (.mc-table-scroll-wrapper) */
+.mc-table-scroll-wrapper table 
+{
+    width           : max-content;  /* Table can be as wide as needed */
+    border-collapse : collapse;
+    font-size       : 14px;
+    border          : none;         /* border is on the wrapper so we do not need one on the table as well */
+}
+
+/* Make the table header area opaque */
+.mc-table-scroll-wrapper thead,
+.mc-table-scroll-wrapper thead tr 
+{
+    background-color : #3a0f14;
+}
+
+/* This style targets header cells (th) that also have the .table-title-cells-style class inside of a wrapped table  */
+.mc-table-scroll-wrapper thead th.table-title-cells-style 
+{
+    position : sticky; /* Keep the header row stuck to the top of the table while scrolling */
+    top      : 0;
+    z-index  : 5;      /* above body cells */
+
+    /* MUST be opaque to stop bleed-through */
+    background-color : #3a0f14;
+    background-clip  : padding-box;
+
+    /* Sticky-safe bottom divider line that ALWAYS stays visible */
+    border-bottom : none !important;
+    box-shadow    : inset 0 -1px 0 var(--default_table_text_color);
+}
