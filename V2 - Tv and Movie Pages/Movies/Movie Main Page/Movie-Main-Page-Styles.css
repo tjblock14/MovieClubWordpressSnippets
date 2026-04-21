@@ -1,0 +1,164 @@
+/********************************************************
+ * New Movie Home Page Grid
+ ********************************************************/
+.mc-movie-home-grid
+{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+/********************************************************
+ * Each Movie Card
+ ********************************************************/
+.mc-movie-home-card
+{
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+/********************************************************
+ * Poster Wrapper
+ ********************************************************/
+.mc-movie-home-poster-wrap
+{
+    position: relative;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    overflow: hidden;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.06);
+}
+
+/********************************************************
+ * Poster Image
+ ********************************************************/
+.mc-movie-home-poster
+{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.25s ease;
+}
+
+/********************************************************
+ * Placeholder if no poster exists
+ ********************************************************/
+.mc-movie-home-poster-placeholder
+{
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px;
+    color: var(--default_table_text_color);
+    background: rgba(255,255,255,0.05);
+    font-size: 14px;
+}
+
+/********************************************************
+ * Hover Overlay
+ ********************************************************/
+.mc-movie-home-overlay
+{
+    position: absolute;
+    inset: 0;
+
+    display: block;
+
+    padding: 12px;
+    text-align: center;
+
+    background: rgba(0, 0, 0, 0.72);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+/********************************************************
+ * Hover Effects
+ ********************************************************/
+.mc-movie-home-card:hover .mc-movie-home-overlay
+{
+    opacity: 1;
+}
+
+.mc-movie-home-card:hover .mc-movie-home-poster
+{
+    transform: scale(1.05);
+}
+
+/********************************************************
+ * Overlay Content
+ ********************************************************/
+.mc-movie-home-overlay-content
+{
+    color: #ffffff;
+    width: 100%;
+}
+
+/********************************************************
+ * Movie Title on Hover
+ * CURRENTLY UNUSUED - NOT SHOWING TITLE ON
+ ********************************************************/
+.mc-movie-home-title
+{
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/********************************************************
+ * Club Average on Hover
+ ********************************************************/
+.mc-movie-home-rating
+{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    font-size: 22px;
+    font-weight: 600;
+}
+
+/********************************************************
+ * Error / Empty States
+ ********************************************************/
+.mc-movie-grid-error,
+.mc-movie-grid-empty
+{
+    color: var(--default_table_text_color);
+    text-align: center;
+    padding: 20px;
+}
+
+/********************************************************
+ * Mobile Tweaks
+ ********************************************************/
+@media (max-width: 767px)
+{
+    .mc-movie-home-grid
+    {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .mc-movie-home-title
+    {
+        font-size: 14px;
+    }
+
+    .mc-movie-home-rating
+    {
+        font-size: 13px;
+    }
+}

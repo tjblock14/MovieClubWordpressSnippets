@@ -38,9 +38,3 @@
     opacity : 1;
 
 }
-
-/* This allows the tooltip to fade in smoothly? */
-.movie-poster-tooltip:hover::after 
-{
-    opacity : 1;
-}

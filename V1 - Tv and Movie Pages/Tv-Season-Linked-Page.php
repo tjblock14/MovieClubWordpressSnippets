@@ -1,5 +1,4 @@
 <?php
-
 add_shortcode('tv_seasons_view', function()
 {
     $couple  = sanitize_text_field($_GET['couple'] ?? '');

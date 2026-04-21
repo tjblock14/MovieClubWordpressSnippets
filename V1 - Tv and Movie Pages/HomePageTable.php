@@ -61,14 +61,6 @@ add_shortcode('club_average_table', function()
                 z-index: 0;
             }
 
-<<<<<<< Updated upstream
-            .mc-table-scroll-wrapper table {
-            min-width: 1100px;     /* your existing min width */
-            width: max-content;
-            border-collapse: collapse;
-            font-size: 14px;
-            border: none;          /* border is on wrapper */
-=======
             .mc-table-scroll-wrapper table 
             {
                 min-width: 1100px;     /* your existing min width */
@@ -76,7 +68,6 @@ add_shortcode('club_average_table', function()
                 border-collapse: collapse;
                 font-size: 14px;
                 border: none;          /* border is on wrapper */
->>>>>>> Stashed changes
             }
 
             /* Make header rows opaque */

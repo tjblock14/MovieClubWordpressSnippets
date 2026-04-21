@@ -1,5 +1,4 @@
 <?php
-
 add_shortcode('movie_club_profile', function($atts = [])
 {
     ob_start();

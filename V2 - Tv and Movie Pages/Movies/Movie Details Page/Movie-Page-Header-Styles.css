@@ -1,0 +1,127 @@
+/********************************************************
+ * Movie Detail Header
+ ********************************************************/
+.MovieHeader
+{
+    display       : flex;
+    gap           : 16px;
+    align-items   : flex-start;
+    padding       : 14px;
+    margin        : 12px 0 16px 0;
+    border        : 1px solid rgba(255,255,255,0.15);
+    border-radius : 12px;
+    background    : rgba(0,0,0,0.12);
+}
+
+.MoviePoster
+{
+    width         : 160px;
+    min-width     : 160px;
+    border-radius : 10px;
+    overflow      : hidden;
+    border        : 1px solid rgba(255,255,255,0.15);
+    background    : rgba(255,255,255,0.06);
+}
+
+.MoviePoster img
+{
+    width   : 100%;
+    height  : auto;
+    display : block;
+}
+
+.MoviePosterNoImage
+{
+    height          : 240px;
+    display         : flex;
+    align-items     : center;
+    justify-content : center;
+    color           : var(--default_table_text_color);
+    font-size       : 12px;
+    opacity         : 0.75;
+}
+
+.MovieHeaderMain
+{
+    flex      : 1;
+    min-width : 0;
+}
+
+.MovieBadges
+{
+    display       : flex;
+    flex-wrap     : wrap;
+    gap           : 8px;
+    margin-bottom : 12px;
+}
+
+.MovieBadge
+{
+    display       : inline-block;
+    padding       : 6px 10px;
+    border-radius : 999px;
+    background    : rgba(255,255,255,0.08);
+    border        : 1px solid rgba(255,255,255,0.12);
+    color         : var(--default_table_text_color);
+    font-size     : 13px;
+    line-height   : 1;
+}
+
+.MovieMetaGrid
+{
+    display               : grid;
+    grid-template-columns : repeat(2, minmax(0, 1fr));
+    gap                   : 10px 18px;
+    margin-bottom         : 14px;
+}
+
+.MovieMetaItem
+{
+    color      : var(--default_table_text_color);
+    font-size  : 15px;
+    line-height: 1.4;
+}
+
+.MovieOverview
+{
+    color       : var(--default_table_text_color);
+    font-size   : 15px;
+    line-height : 1.55;
+}
+
+.MovieDetailSection
+{
+    margin        : 16px 0 0 0;
+    padding       : 14px;
+    border        : 1px solid rgba(255,255,255,0.12);
+    border-radius : 12px;
+    background    : rgba(0,0,0,0.08);
+    color         : var(--default_table_text_color);
+}
+
+.MovieDetailSectionTitle
+{
+    margin     : 0 0 10px 0;
+    font-size  : 20px;
+    font-weight: 600;
+    color      : var(--default_table_text_color);
+}
+
+@media (max-width: 700px)
+{
+    .MovieHeader
+    {
+        flex-direction : column;
+    }
+
+    .MoviePoster
+    {
+        width     : 140px;
+        min-width : 140px;
+    }
+
+    .MovieMetaGrid
+    {
+        grid-template-columns : 1fr;
+    }
+}

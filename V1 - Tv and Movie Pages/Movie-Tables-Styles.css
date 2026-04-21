@@ -94,3 +94,47 @@
     border-bottom: none !important;
     box-shadow: inset 0 -1px 0 var(--default_table_text_color);
 }
+
+.rating-cell 
+{
+    width : 150px;
+}
+
+/* This is the style used in most table headers. */
+.table-title-cells-style 
+{
+    text-align     : center;
+    vertical-align : middle;
+    font-size      : 20px;
+    font-weight    : 600;
+    padding        : 4px;
+    color          : var(--default_table_text_color);
+}
+
+
+/* This is the normal style used in most cells in the movie and tv tables */
+.tables-small-data-style 
+{
+    text-align     : center;
+    vertical-align : middle;
+    font-size      : 14px;
+    font-weight    : 100;
+    padding        : 4px;
+    color          : var(--default_table_text_color);
+}
+
+/********************************************************
+* Add a TV Show / Add a Movie classes
+*******************************************************/
+.add-tv-show-results 
+{
+    color : var(--default_table_text_color);
+}
+
+/********************************************************
+* Seasons Page: Show Info Class
+*******************************************************/
+.TvShowMetaItem
+{
+    color : var(--default_table_text_color);
+}
